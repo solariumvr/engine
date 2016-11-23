@@ -108,7 +108,7 @@ source_set("common") {
     "//flutter/glue",
     "//flutter/lib/ui",
     "//flutter/runtime",
-    "//skia",
+    "//flutter/skia",
     "//flutter/sky/engine/wtf",
     "//flutter/synchronization",
     "//lib/ftl",

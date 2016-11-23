@@ -31,9 +31,12 @@
 #ifndef SKY_ENGINE_WTF_THREADIDENTIFIERDATAPTHREADS_H_
 #define SKY_ENGINE_WTF_THREADIDENTIFIERDATAPTHREADS_H_
 
-#include <pthread.h>
 #include "flutter/sky/engine/wtf/Noncopyable.h"
 #include "flutter/sky/engine/wtf/Threading.h"
+#include "flutter/sky/engine/wtf/OperatingSystem.h"
+
+#if OS(POSIX)
+#include <pthread.h>
 
 namespace WTF {
 
@@ -75,6 +78,7 @@ private:
 
 } // namespace WTF
 
+#endif // OS(POSIX)
 #endif  // SKY_ENGINE_WTF_THREADIDENTIFIERDATAPTHREADS_H_
 
 

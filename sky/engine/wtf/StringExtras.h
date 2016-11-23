@@ -29,7 +29,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
+//#include <strings.h>
 #include "flutter/sky/engine/wtf/OperatingSystem.h"
 
 #if !HAVE(STRNSTR)

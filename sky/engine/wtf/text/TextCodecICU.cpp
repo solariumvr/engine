@@ -38,6 +38,10 @@
 
 using std::min;
 
+#ifdef OS(WIN)
+#define strcasecmp _stricmp
+#endif
+
 namespace WTF {
 
 const size_t ConversionBufferSize = 16384;

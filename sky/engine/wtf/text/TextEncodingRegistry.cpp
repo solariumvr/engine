@@ -42,6 +42,10 @@
 #include "flutter/sky/engine/wtf/text/TextCodecUserDefined.h"
 #include "flutter/sky/engine/wtf/text/TextEncoding.h"
 
+#ifdef OS(WIN)
+#define strcasecmp _stricmp
+#endif
+
 namespace WTF {
 
 const size_t maxEncodingNameLength = 63;

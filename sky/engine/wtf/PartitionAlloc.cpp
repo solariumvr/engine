@@ -342,7 +342,7 @@ static ALWAYS_INLINE void* partitionAllocPartitionPages(PartitionRootBase* root,
     if (root->totalSizeOfSuperPages > kMaxPartitionSize)
         partitionFull();
     char* requestedAddress = root->nextSuperPage;
-    char* superPage = reinterpret_cast<char*>(allocPages(requestedAddress, kSuperPageSize, kSuperPageSize));
+    char* superPage = reinterpret_cast<char*>(allocPages(requestedAddress, kSuperPageSize, kSuperPageSize, PageAccessible));
     if (UNLIKELY(!superPage)) {
         if (flags & PartitionAllocReturnNull)
             return 0;
@@ -588,7 +588,7 @@ static ALWAYS_INLINE void* partitionDirectMap(PartitionRootBase* root, int flags
     // MADV_WILLNEED on POSIX).
     // TODO: these pages will be zero-filled. Consider internalizing an
     // allocZeroed() API so we can avoid a memset() entirely in this case.
-    char* ptr = reinterpret_cast<char*>(allocPages(0, mapSize, kSuperPageSize));
+    char* ptr = reinterpret_cast<char*>(allocPages(0, mapSize, kSuperPageSize, PageAccessible));
     if (!ptr) {
         if (flags & PartitionAllocReturnNull)
             return 0;

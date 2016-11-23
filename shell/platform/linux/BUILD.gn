@@ -19,7 +19,7 @@ executable("linux") {
     "//flutter/shell/common",
     "//flutter/shell/gpu",
     "//flutter/shell/testing",
-    "//skia",
+    "//flutter/skia",
     "//lib/ftl",
     "//third_party/glfw",
     "//third_party/glad",
@@ -32,7 +32,8 @@ if(!is_win){
   ]
 } else {
     libs = [
-        "opengl32.lib"
+        "opengl32.lib",
+        "rpcrt4.lib",
     ]
     ldflags = [
 #        "-lgdi32"

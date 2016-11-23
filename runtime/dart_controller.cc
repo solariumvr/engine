@@ -28,6 +28,8 @@
 #include "lib/tonic/logging/dart_invoke.h"
 #include "lib/tonic/scopes/dart_api_scope.h"
 #include "lib/tonic/scopes/dart_isolate_scope.h"
+#include "base/files/file_path.h"
+#include "base/files/file_util.h"
 
 #ifdef OS_ANDROID
 #include "flutter/lib/jni/dart_jni.h"
@@ -41,9 +43,10 @@ namespace {
 
 // TODO(abarth): Consider adding this to //lib/ftl.
 std::string ResolvePath(std::string path) {
-  if (!path.empty() && path[0] == '/')
-    return path;
-  return files::SimplifyPath(files::GetCurrentDirectory() + "/" + path);
+	base::FilePath* file_path;
+	base::GetCurrentDirectory(file_path);
+	file_path->Append(path);
+	return file_path->MaybeAsASCII();
 }
 
 }  // namespace

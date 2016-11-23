@@ -50,10 +50,14 @@ bool PathExists(const std::string& path) {
 }
 
 std::string FindPackagesPath(const std::string& main_dart) {
-  std::string directory = files::GetDirectoryName(main_dart);
+	base::FilePath file_path(main_dart);
+	std::string directory = file_path.DirName().MaybeAsASCII();
+  //std::string directory = files::GetDirectoryName(main_dart);
   std::string packages_path = directory + "/.packages";
   if (!PathExists(packages_path)) {
-    directory = files::GetDirectoryName(directory);
+		file_path.AppendASCII("..");
+    //directory = files::GetDirectoryName(directory);
+		directory = file_path.DirName().MaybeAsASCII();
     packages_path = directory + "/.packages";
     if (!PathExists(packages_path))
       packages_path = std::string();

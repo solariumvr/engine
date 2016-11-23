@@ -42,11 +42,12 @@
 #include "flutter/sky/engine/wtf/dtoa.h"
 #include "wtf/dtoa/cached-powers.h"
 
+
+#if USE(PTHREADS)
+
 #include <limits.h>
 #include <sched.h>
 #include <sys/time.h>
-
-#if USE(PTHREADS)
 
 namespace WTF {
 

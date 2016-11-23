@@ -47,7 +47,7 @@ shared_library("sky_shell") {
     "//flutter/runtime",
     "//flutter/shell/common",
     "//flutter/shell/gpu",
-    "//skia",
+    "//flutter/skia",
     "//flutter/vulkan",
     "//lib/ftl",
     ":jni_headers",
