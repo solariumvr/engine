@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "apps/mozart/lib/skia/skia_vmo_surface.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 
 namespace flutter_runner {
@@ -28,7 +28,7 @@ void Rasterizer::SetScene(fidl::InterfaceHandle<mozart::Scene> scene) {
 
 void Rasterizer::Draw(std::unique_ptr<flow::LayerTree> layer_tree,
                       ftl::Closure callback) {
-  FTL_DCHECK(layer_tree);
+  DCHECK(layer_tree);
   if (!scene_) {
     callback();
     return;
@@ -54,7 +54,7 @@ void Rasterizer::Draw(std::unique_ptr<flow::LayerTree> layer_tree,
   sk_sp<SkSurface> surface =
       mozart::MakeSkSurface(frame_size, buffer_producer_.get(), &image);
 
-  FTL_CHECK(surface);
+  CHECK(surface);
 
   flow::CompositorContext::ScopedFrame frame =
       compositor_context_.AcquireFrame(nullptr, *surface->getCanvas());

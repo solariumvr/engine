@@ -70,7 +70,7 @@ void DartUI::InitForGlobal() {
 }
 
 void DartUI::InitForIsolate() {
-  FTL_DCHECK(g_natives);
+  DCHECK(g_natives);
   DART_CHECK_VALID(Dart_SetNativeResolver(Dart_LookupLibrary(ToDart("dart:ui")),
                                           GetNativeFunction, GetSymbol));
 }

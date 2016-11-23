@@ -6,12 +6,13 @@
 #define SHELL_COMMON_SHELL_H_
 
 #include "base/threading/thread.h"
-#include "flutter/shell/common/tracing_controller.h"
-#include "lib/ftl/macros.h"
+//#include "flutter/shell/common/tracing_controller.h"
+#include "base/macros.h"
 #include "lib/ftl/memory/ref_ptr.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "lib/ftl/synchronization/waitable_event.h"
 #include "lib/ftl/tasks/task_runner.h"
+#include "base/threading/thread_checker.h"
 
 namespace shell {
 
@@ -27,21 +28,21 @@ class Shell {
 
   static Shell& Shared();
 
-  TracingController& tracing_controller();
+//  TracingController& tracing_controller();
 
   // Maintain a list of rasterizers.
   // These APIs must only be accessed on the GPU thread.
-  void AddRasterizer(const ftl::WeakPtr<Rasterizer>& rasterizer);
+  void AddRasterizer(const base::WeakPtr<Rasterizer>& rasterizer);
   void PurgeRasterizers();
-  void GetRasterizers(std::vector<ftl::WeakPtr<Rasterizer>>* rasterizer);
+  void GetRasterizers(std::vector<base::WeakPtr<Rasterizer>>* rasterizer);
 
   // List of PlatformViews.
 
   // These APIs must only be accessed on UI thread.
-  void AddPlatformView(const ftl::WeakPtr<PlatformView>& platform_view);
+  void AddPlatformView(const base::WeakPtr<PlatformView>& platform_view);
   void PurgePlatformViews();
   void GetPlatformViews(
-      std::vector<ftl::WeakPtr<PlatformView>>* platform_views);
+      std::vector<base::WeakPtr<PlatformView>>* platform_views);
 
   struct PlatformViewInfo {
     uintptr_t view_id;
@@ -89,12 +90,12 @@ class Shell {
   std::unique_ptr<base::ThreadChecker> gpu_thread_checker_;
   std::unique_ptr<base::ThreadChecker> ui_thread_checker_;
 
-  TracingController tracing_controller_;
+//  TracingController tracing_controller_;
 
-  std::vector<ftl::WeakPtr<Rasterizer>> rasterizers_;
-  std::vector<ftl::WeakPtr<PlatformView>> platform_views_;
+  std::vector<base::WeakPtr<Rasterizer>> rasterizers_;
+  std::vector<base::WeakPtr<PlatformView>> platform_views_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(Shell);
+  DISALLOW_COPY_AND_ASSIGN(Shell);
 };
 
 }  // namespace shell

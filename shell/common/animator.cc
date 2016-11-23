@@ -12,7 +12,7 @@
 
 namespace shell {
 
-Animator::Animator(ftl::WeakPtr<Rasterizer> rasterizer,
+Animator::Animator(base::WeakPtr<Rasterizer> rasterizer,
                    VsyncWaiter* waiter,
                    Engine* engine)
     : rasterizer_(rasterizer),

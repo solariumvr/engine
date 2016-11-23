@@ -134,7 +134,7 @@ static inline blink::PointerData::Change PointerChangeFromNSEventPhase(
     case blink::PointerData::Change::kAdd:
     case blink::PointerData::Change::kRemove:
     case blink::PointerData::Change::kHover:
-      FTL_DCHECK(!_mouseIsDown);
+      DCHECK(!_mouseIsDown);
       break;
   }
 

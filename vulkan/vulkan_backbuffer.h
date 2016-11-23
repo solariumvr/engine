@@ -7,7 +7,7 @@
 
 #include <array>
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "vulkan_proc_table.h"
 #include "vulkan_handle.h"
 
@@ -44,7 +44,7 @@ class VulkanBackbuffer {
 
   void WaitFences();
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(VulkanBackbuffer);
+  DISALLOW_COPY_AND_ASSIGN(VulkanBackbuffer);
 };
 
 }  // namespace vulkan

@@ -6,8 +6,8 @@
 #define SHELL_TESTING_PLATFORM_VIEW_TEST_H_
 
 #include "flutter/shell/common/platform_view.h"
-#include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/macros.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -26,7 +26,7 @@ class PlatformViewTest : public PlatformView {
                      const std::string& packages) override;
 
  private:
-  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformViewTest);
+  DISALLOW_COPY_AND_ASSIGN(PlatformViewTest);
 };
 
 }  // namespace shell

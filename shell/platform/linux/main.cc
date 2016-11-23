@@ -7,6 +7,7 @@
 #include "base/bind.h"
 #include "base/command_line.h"
 #include "base/logging.h"
+#include "base/run_loop.h"
 #include "base/message_loop/message_loop.h"
 #include "flutter/common/threads.h"
 #include "flutter/shell/common/shell.h"
@@ -28,7 +29,8 @@ int RunNonInteractive() {
     return 1;
   }
 
-  message_loop.Run();
+	base::RunLoop().Run();
+  //message_loop.Run();
   return 0;
 }
 
@@ -51,7 +53,7 @@ int RunInteractive() {
     auto args = command_line.GetArgs();
     if (args.empty())
       return 1;
-    target = args[0];
+    target = std::string(args[0].begin(), args[0].end());
   }
 
   if (target.empty())
@@ -75,8 +77,8 @@ int RunInteractive() {
         }
       });
 
-  message_loop.Run();
-
+  //message_loop.Run();
+	base::RunLoop().Run();
   platform_view->NotifyDestroyed();
 
   return 0;

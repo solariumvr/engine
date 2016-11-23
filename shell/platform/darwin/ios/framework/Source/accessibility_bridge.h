@@ -12,7 +12,7 @@
 
 #include "flutter/lib/ui/semantics/semantics_node.h"
 #include "flutter/shell/platform/darwin/ios/framework/Source/FlutterView.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "third_party/skia/include/core/SkMatrix44.h"
 #include "third_party/skia/include/core/SkRect.h"
 
@@ -62,7 +62,7 @@ class AccessibilityBridge final {
   PlatformViewIOS* platform_view_;
   std::unordered_map<int, SemanticsObject*> objects_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(AccessibilityBridge);
+  DISALLOW_COPY_AND_ASSIGN(AccessibilityBridge);
 };
 
 }  // namespace shell

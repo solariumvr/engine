@@ -113,7 +113,7 @@ void PlatformView::NotifyDestroyed() {
   latch.Wait();
 }
 
-ftl::WeakPtr<PlatformView> PlatformView::GetWeakPtr() {
+base::WeakPtr<PlatformView> PlatformView::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 

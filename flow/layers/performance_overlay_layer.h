@@ -6,7 +6,7 @@
 #define FLUTTER_FLOW_LAYERS_PERFORMANCE_OVERLAY_LAYER_H_
 
 #include "flutter/flow/layers/layer.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace flow {
 
@@ -24,7 +24,7 @@ class PerformanceOverlayLayer : public Layer {
  private:
   int options_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PerformanceOverlayLayer);
+  DISALLOW_COPY_AND_ASSIGN(PerformanceOverlayLayer);
 };
 
 }  // namespace flow

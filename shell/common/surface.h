@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "lib/ftl/compiler_specific.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 
 namespace shell {
@@ -28,7 +28,7 @@ class SurfaceFrame {
 
   virtual bool PerformSubmit() = 0;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(SurfaceFrame);
+  DISALLOW_COPY_AND_ASSIGN(SurfaceFrame);
 };
 
 class Surface {
@@ -46,7 +46,7 @@ class Surface {
   virtual GrContext* GetContext() = 0;
 
  private:
-  FTL_DISALLOW_COPY_AND_ASSIGN(Surface);
+  DISALLOW_COPY_AND_ASSIGN(Surface);
 };
 
 }  // namespace shell

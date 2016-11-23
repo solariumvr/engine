@@ -5,7 +5,7 @@
 #include "flutter/assets/directory_asset_bundle.h"
 
 #include <fcntl.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 #include <utility>
 
@@ -33,7 +33,7 @@ std::string DirectoryAssetBundle::GetPathForAsset(
     const std::string& asset_name) {
   std::string asset_path = files::SimplifyPath(directory_ + "/" + asset_name);
   if (asset_path.find(directory_) != 0u) {
-    FTL_LOG(ERROR) << "Asset name '" << asset_name
+    LOG(ERROR) << "Asset name '" << asset_name
                    << "' attempted to traverse outside asset bundle.";
     return std::string();
   }

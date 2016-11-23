@@ -44,9 +44,15 @@
 #endif
 
 #if defined(COMPONENT_BUILD)
+#if defined(WIN32)
+    #define BLINK_EXPORT __declspec(dllexport)
+    #define BLINK_PLATFORM_EXPORT __declspec(dllexport)
+    #define BLINK_COMMON_EXPORT __declspec(dllexport)
+#else
     #define BLINK_EXPORT __attribute__((visibility("default")))
     #define BLINK_PLATFORM_EXPORT __attribute__((visibility("default")))
     #define BLINK_COMMON_EXPORT __attribute__((visibility("default")))
+#endif
 #else // defined(COMPONENT_BUILD)
     #define BLINK_EXPORT
     #define BLINK_PLATFORM_EXPORT

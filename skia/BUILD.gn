@@ -2,6 +2,14 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import("//build/config/features.gni")
+import("//build/config/ui.gni")
+import("//testing/test.gni")
+import("//third_party/skia/gn/shared_sources.gni")
+
+declare_args() {
+component_mode = "shared_library"
+}
 if (is_fuchsia) {
 
 group("skia") {
@@ -15,8 +23,7 @@ group("skia") {
 
 } else {
 
-import("//build/config/features.gni")
-import("//testing/test.gni")
+
 
 if (current_cpu == "arm" || current_cpu == "arm64") {
   import("//build/config/arm.gni")
@@ -95,6 +102,52 @@ config("skia_config") {
     "config",
     "ext",
   ]
+
+  defines = [ "SK_IGNORE_DW_GRAY_FIX" ]
+  defines += skia_chromium_defines
+
+  defines += []
+
+  if (skia_build_no_opts) {
+    defines += [ "SK_BUILD_NO_OPTS" ]
+  }
+
+  if (is_component_build) {
+    defines += [
+      "SKIA_DLL",
+      "GR_GL_IGNORE_ES3_MSAA=0",
+    ]
+  }
+
+  if (skia_support_gpu) {
+    include_dirs += [
+      "//third_party/skia/include/gpu",
+      "//third_party/skia/src/gpu",
+      "//third_party/skia/src/sksl",
+    ]
+    defines += [ "SK_SUPPORT_GPU=1" ]
+  } else {
+    defines += [ "SK_SUPPORT_GPU=0" ]
+  }
+
+  if (is_android) {
+    defines += [
+      "SK_BUILD_FOR_ANDROID",
+      "USE_CHROMIUM_SKIA",
+    ]
+  }
+
+  if (is_mac) {
+    defines += [ "SK_BUILD_FOR_MAC" ]
+  }
+
+  if (is_win) {
+    defines += [ "GR_GL_FUNCTION_TYPE=__stdcall" ]
+  }
+
+  if (skia_whitelist_serialized_typefaces) {
+    defines += [ "SK_WHITELIST_SERIALIZED_TYPEFACES" ]
+  }
 }
 
 # Internal-facing config for Skia library code.
@@ -216,6 +269,33 @@ config("skia_library_config") {
 
     libs = [ "ImageIO.framework" ]
   }
+
+  if (is_win) {
+      include_dirs += [
+        "//third_party/skia/include/utils/win",
+        "//third_party/skia/src/utils/win",
+      ]
+
+      defines += [
+        # On windows, GDI handles are a scarse system-wide resource so we have to
+        # keep the glyph cache, which holds up to 4 GDI handles per entry, to a
+        # fairly small size. http://crbug.com/314387
+        "SK_DEFAULT_FONT_CACHE_COUNT_LIMIT=256",
+      ]
+
+      cflags = [
+        "/wd4244",  # conversion from 'type1( __int64)' to 'type2 (unsigned int)'
+        "/wd4267",  # conversion from 'size_t' (64 bit) to 'type'(32 bit).
+        "/wd4341",  # signed value is out of range for enum constant.
+        "/wd4345",  # Object is default-initialized if initialization is omitted.
+        "/wd4390",  # ';'empty statement found in looping;is it what was intended?
+        "/wd4554",  # 'operator' : check operator precedence for possible error
+        "/wd4748",  # compiler will disable optimizations if a function has inline
+                    # assembly code contains flow control(jmp or jcc) statements.
+
+        "/wd4800",  # forcing value to bool 'true/false'(assigning int to bool).
+      ]
+    }
 }
 
 component("skia") {
@@ -363,7 +443,7 @@ component("skia") {
     sources -= [
       # Keeping _win.cpp
       "//third_party/skia/src/utils/SkThreadUtils_pthread.cpp",
-      "//third_party/skia/src/utils/SkThreadUtils_pthread_other.cpp",
+#      "//third_party/skia/src/utils/SkThreadUtils_pthread_other.cpp",
     ]
   } else {
     sources -= [
@@ -382,6 +462,17 @@ component("skia") {
 
     set_sources_assignment_filter(sources_assignment_filter)
   }
+
+  # need separate win section to handle chromes auto gn filter
+    # (build/config/BUILDCONFIG.gn)
+    if (is_win) {
+      sources -= [
+        #windows
+        "//third_party/skia/src/utils/win/SkAutoCoInitialize.cpp",
+        "//third_party/skia/src/utils/win/SkIStream.cpp",
+        "//third_party/skia/src/utils/win/SkWGL_win.cpp",
+      ]
+    }
 
   # Fixup skia library sources.
   if (is_win) {
@@ -428,6 +519,17 @@ component("skia") {
       "//third_party/skia/src/ports/SkFontHost_FreeType.cpp",
       "//third_party/skia/src/ports/SkFontHost_FreeType_common.cpp",
     ]
+  }
+
+  # Select the right BitmapPlatformDevice.
+  if (is_win) {
+    sources += [ "ext/bitmap_platform_device_win.cc" ]
+  } else if (is_mac) {
+    sources += [ "ext/bitmap_platform_device_mac.cc" ]
+  } else if (use_cairo) {
+    sources += [ "ext/bitmap_platform_device_cairo.cc" ]
+  } else if (!is_ios) {
+    sources += [ "ext/bitmap_platform_device_skia.cc" ]
   }
 
   if (is_clang) {
@@ -480,6 +582,110 @@ component("skia") {
 }
 
 # Separated out so it can be compiled with different flags for SSE.
+if (!skia_build_no_opts) {
+  if (current_cpu == "arm64") {
+    source_set("skia_opts_crc32") {
+      sources = skia_opts.crc32_sources
+      cflags = [ "-march=armv8-a+crc" ]
+      visibility = [ ":skia_opts" ]
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        ":skia_library_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
+  }
+  if (current_cpu == "x86" || current_cpu == "x64") {
+    source_set("skia_opts_sse3") {
+      sources = skia_opts.ssse3_sources
+      if (!is_win || is_clang) {
+        cflags = [ "-mssse3" ]
+      }
+      if (is_win) {
+        defines = [ "SK_CPU_SSE_LEVEL=31" ]
+      }
+      visibility = [ ":skia_opts" ]
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        ":skia_library_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
+    source_set("skia_opts_sse41") {
+      sources = skia_opts.sse41_sources
+      if (!is_win || is_clang) {
+        cflags = [ "-msse4.1" ]
+      }
+      if (is_win) {
+        defines = [ "SK_CPU_SSE_LEVEL=41" ]
+      }
+      visibility = [ ":skia_opts" ]
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        ":skia_library_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
+    source_set("skia_opts_sse42") {
+      sources = skia_opts.sse42_sources
+      if (!is_win || is_clang) {
+        cflags = [ "-msse4.2" ]
+      }
+      if (is_win) {
+        defines = [ "SK_CPU_SSE_LEVEL=42" ]
+      }
+      visibility = [ ":skia_opts" ]
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        ":skia_library_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
+    source_set("skia_opts_avx") {
+      sources = skia_opts.avx_sources
+      if (!is_win) {
+        cflags = [ "-mavx" ]
+      }
+      if (is_win) {
+        cflags = [ "/arch:AVX" ]
+      }
+      visibility = [ ":skia_opts" ]
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        ":skia_library_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
+    source_set("skia_opts_hsw") {
+      sources = skia_opts.hsw_sources
+      if (!is_win) {
+        cflags = [
+          "-mavx2",
+          "-mbmi",
+          "-mbmi2",
+          "-mf16c",
+          "-mfma",
+        ]
+      }
+      if (is_win) {
+        cflags = [ "/arch:AVX2" ]
+      }
+      visibility = [ ":skia_opts" ]
+      configs -= [ "//build/config/compiler:chromium_code" ]
+      configs += [
+        ":skia_config",
+        ":skia_library_config",
+        "//build/config/compiler:no_chromium_code",
+      ]
+    }
+  }
+}
+
 source_set("skia_opts") {
   cflags = []
   defines = []
@@ -488,7 +694,9 @@ source_set("skia_opts") {
     sources = gypi_skia_opts.sse2_sources + gypi_skia_opts.ssse3_sources +
               gypi_skia_opts.sse41_sources + gypi_skia_opts.sse42_sources +
               gypi_skia_opts.avx_sources
-    cflags += [ "-msse4.1" ]
+    if(!is_win){
+        cflags += [ "-msse4.1" ]
+    }
   } else if (current_cpu == "arm") {
     # The assembly uses the frame pointer register (r7 in Thumb/r11 in
     # ARM), the compiler doesn't like that.

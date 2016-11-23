@@ -8,8 +8,8 @@
 #include <memory>
 #include <string>
 
-#include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/macros.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -32,7 +32,7 @@ class TestRunner {
 
   std::unique_ptr<PlatformView> platform_view_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(TestRunner);
+  DISALLOW_COPY_AND_ASSIGN(TestRunner);
 };
 
 }  // namespace shell

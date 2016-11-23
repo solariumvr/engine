@@ -16,8 +16,8 @@ MessagePumpGLFW::MessagePumpGLFW() : in_run_(false), should_quit_(false) {}
 
 MessagePumpGLFW::~MessagePumpGLFW() = default;
 
-scoped_ptr<base::MessagePump> MessagePumpGLFW::Create() {
-  return scoped_ptr<MessagePump>(new MessagePumpGLFW());
+std::unique_ptr<base::MessagePump> MessagePumpGLFW::Create() {
+	return std::unique_ptr <base::MessagePump >(new MessagePumpGLFW());
 }
 
 void MessagePumpGLFW::Run(Delegate* delegate) {

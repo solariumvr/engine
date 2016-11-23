@@ -12,7 +12,7 @@
 #include "apps/modular/lib/app/application_context.h"
 #include "apps/modular/services/application/application_runner.fidl.h"
 #include "flutter/content_handler/application_controller_impl.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace flutter_runner {
 
@@ -43,7 +43,7 @@ class App : public modular::ApplicationRunner {
                      std::unique_ptr<ApplicationControllerImpl>>
       controllers_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(App);
+  DISALLOW_COPY_AND_ASSIGN(App);
 };
 
 }  // namespace flutter_runner

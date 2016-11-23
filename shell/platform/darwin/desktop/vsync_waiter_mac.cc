@@ -7,7 +7,7 @@
 #include <CoreVideo/CoreVideo.h>
 
 #include "flutter/common/threads.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 
 namespace shell {
 
@@ -50,7 +50,7 @@ void VsyncWaiterMac::OnDisplayLink() {
 }
 
 void VsyncWaiterMac::AsyncWaitForVsync(Callback callback) {
-  FTL_DCHECK(!callback_);
+  DCHECK(!callback_);
   callback_ = std::move(callback);
   CVDisplayLinkStart(link_);
 }

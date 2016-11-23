@@ -12,8 +12,8 @@
 #include "flutter/shell/common/shell.h"
 #include "flutter/shell/common/surface.h"
 #include "flutter/shell/common/vsync_waiter.h"
-#include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/macros.h"
+#include "base/memory/weak_ptr.h"
 #include "lib/ftl/synchronization/waitable_event.h"
 #include "third_party/skia/include/core/SkSize.h"
 #include "third_party/skia/include/gpu/GrContext.h"
@@ -48,7 +48,7 @@ class PlatformView {
 
   void NotifyDestroyed();
 
-  ftl::WeakPtr<PlatformView> GetWeakPtr();
+  base::WeakPtr<PlatformView> GetWeakPtr();
 
   // The VsyncWaiter will live at least as long as the PlatformView.
   virtual VsyncWaiter* GetVsyncWaiter();
@@ -81,9 +81,9 @@ class PlatformView {
   SkISize size_;
 
  private:
-  ftl::WeakPtrFactory<PlatformView> weak_factory_;
+  base::WeakPtrFactory<PlatformView> weak_factory_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformView);
+  DISALLOW_COPY_AND_ASSIGN(PlatformView);
 };
 
 }  // namespace shell

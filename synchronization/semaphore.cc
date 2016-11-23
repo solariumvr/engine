@@ -4,7 +4,7 @@
 
 #include "flutter/synchronization/semaphore.h"
 #include "lib/ftl/build_config.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 
 #if OS_MACOSX
 
@@ -43,10 +43,63 @@ class PlatformSemaphore {
  private:
   dispatch_semaphore_t _sem;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformSemaphore);
+  DISALLOW_COPY_AND_ASSIGN(PlatformSemaphore);
 };
 
 }  // namespace flutter
+
+#elif OS_WIN
+
+#include <windows.h>
+
+namespace flutter {
+
+	class PlatformSemaphore {
+	public:
+		explicit PlatformSemaphore(uint32_t count)
+		{
+			sem_ = CreateSemaphore(NULL, count, count, NULL);
+			valid_ = sem_;
+		}
+
+		~PlatformSemaphore() {
+			if (valid_) {
+				CloseHandle(sem_);
+				//int result = ::sem_destroy(&sem_);
+				// Can only be EINVAL which should not be possible since we checked for
+				// validity.
+				//DCHECK(result == 0);
+			}
+		}
+
+		bool IsValid() const { return valid_; }
+
+		bool TryWait() {
+			if (!valid_) {
+				return false;
+			}
+
+			return WaitForSingleObject(sem_, 0L);
+			//return HANDLE_EINTR(::sem_trywait(&sem_)) == 0;
+		}
+
+		void Signal() {
+			if (!valid_) {
+				return;
+			}
+
+			ReleaseSemaphore(sem_, 1, NULL);
+			//::sem_post(&sem_);
+			return;
+		}
+
+	private:
+		bool valid_;
+		HANDLE sem_;
+
+		DISALLOW_COPY_AND_ASSIGN(PlatformSemaphore);
+	};
+}
 
 #else  // OS_MACOSX
 
@@ -65,7 +118,7 @@ class PlatformSemaphore {
       int result = ::sem_destroy(&sem_);
       // Can only be EINVAL which should not be possible since we checked for
       // validity.
-      FTL_DCHECK(result == 0);
+      DCHECK(result == 0);
     }
   }
 
@@ -93,7 +146,7 @@ class PlatformSemaphore {
   bool valid_;
   sem_t sem_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformSemaphore);
+  DISALLOW_COPY_AND_ASSIGN(PlatformSemaphore);
 };
 
 }  // namespace flutter

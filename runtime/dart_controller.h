@@ -6,9 +6,10 @@
 #define FLUTTER_RUNTIME_DART_CONTROLLER_H_
 
 #include <memory>
+#include <string>
 
 #include "dart/runtime/include/dart_api.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace blink {
 class UIDartState;
@@ -34,7 +35,7 @@ class DartController {
   // during isolate shutdown.
   UIDartState* ui_dart_state_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(DartController);
+  DISALLOW_COPY_AND_ASSIGN(DartController);
 };
 }
 

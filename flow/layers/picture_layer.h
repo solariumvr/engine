@@ -34,7 +34,7 @@ class PictureLayer : public Layer {
   // If we rasterized the picture separately, image_ holds the pixels.
   sk_sp<SkImage> image_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PictureLayer);
+  DISALLOW_COPY_AND_ASSIGN(PictureLayer);
 };
 
 }  // namespace flow

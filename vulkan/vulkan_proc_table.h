@@ -5,7 +5,7 @@
 #ifndef FLUTTER_VULKAN_VULKAN_PROC_TABLE_H_
 #define FLUTTER_VULKAN_VULKAN_PROC_TABLE_H_
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "vulkan_interface.h"
 
 namespace vulkan {
@@ -78,7 +78,7 @@ class VulkanProcTable {
   bool CloseLibraryHandle();
   bool AcquireProcs();
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(VulkanProcTable);
+  DISALLOW_COPY_AND_ASSIGN(VulkanProcTable);
 };
 
 }  // namespace vulkan

@@ -5,7 +5,7 @@
 #include "flutter/shell/common/engine.h"
 
 #include <sys/stat.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <utility>
 
 #include "flutter/assets/directory_asset_bundle.h"
@@ -26,6 +26,15 @@
 #include "third_party/rapidjson/rapidjson/document.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "third_party/skia/include/core/SkPictureRecorder.h"
+#include "base/files/file_util.h"
+
+#include <sys/stat.h>
+
+#if defined(WIN32) || defined(WIN64)
+// Copied from linux libc sys/stat.h:
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
 
 namespace shell {
 namespace {
@@ -36,7 +45,8 @@ constexpr char kNavigationChannel[] = "flutter/navigation";
 constexpr char kLocalizationChannel[] = "flutter/localization";
 
 bool PathExists(const std::string& path) {
-  return access(path.c_str(), R_OK) == 0;
+	return base::PathExists(base::FilePath(std::wstring(path.begin(), path.end())));
+  //return access(path.c_str(), R_OK) == 0;
 }
 
 std::string FindPackagesPath(const std::string& main_dart) {
@@ -69,7 +79,7 @@ Engine::Engine(PlatformView* platform_view)
 
 Engine::~Engine() {}
 
-ftl::WeakPtr<Engine> Engine::GetWeakPtr() {
+base::WeakPtr<Engine> Engine::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 
@@ -116,7 +126,7 @@ void Engine::RunBundleAndSource(const std::string& bundle_path,
                                 const std::string& main,
                                 const std::string& packages) {
   TRACE_EVENT0("flutter", "Engine::RunBundleAndSource");
-  FTL_CHECK(!blink::IsRunningPrecompiledCode())
+  CHECK(!blink::IsRunningPrecompiledCode())
       << "Cannot run from source in a precompiled build.";
   std::string packages_path = packages;
   if (packages_path.empty())
@@ -207,7 +217,7 @@ bool Engine::HandleLifecyclePlatformMessage(blink::PlatformMessage* message) {
 
 bool Engine::HandleNavigationPlatformMessage(
     ftl::RefPtr<blink::PlatformMessage> message) {
-  FTL_DCHECK(!runtime_);
+  DCHECK(!runtime_);
   const auto& data = message->data();
 
   rapidjson::Document document;

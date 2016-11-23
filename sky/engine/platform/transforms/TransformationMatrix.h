@@ -30,6 +30,7 @@
 #include "flutter/sky/engine/platform/geometry/FloatPoint.h"
 #include "flutter/sky/engine/platform/geometry/FloatPoint3D.h"
 #include "flutter/sky/engine/platform/geometry/IntPoint.h"
+#include "flutter/sky/engine/wtf/Alignment.h"
 #include "flutter/sky/engine/wtf/CPU.h"
 #include "flutter/sky/engine/wtf/FastAllocBase.h"
 #include "third_party/skia/include/core/SkMatrix44.h"
@@ -50,10 +51,10 @@ class PLATFORM_EXPORT TransformationMatrix {
     WTF_MAKE_FAST_ALLOCATED;
 public:
 
-#if CPU(APPLE_ARMV7S) || defined(TRANSFORMATION_MATRIX_USE_X86_64_SSE2)
-    typedef double Matrix4[4][4] __attribute__((aligned (16)));
+#if defined(TRANSFORMATION_MATRIX_USE_X86_64_SSE2)
+	typedef WTF_ALIGNED(double, Matrix4[4][4], 16);
 #else
-    typedef double Matrix4[4][4];
+	typedef double Matrix4[4][4];
 #endif
 
     TransformationMatrix() { makeIdentity(); }

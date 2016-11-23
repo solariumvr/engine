@@ -33,6 +33,15 @@
 #include "flutter/sky/engine/wtf/CPU.h"
 #include "flutter/sky/engine/wtf/OperatingSystem.h"
 
+#if COMPILER(MSVC)
+ // Make math.h behave like other platforms.
+#define _USE_MATH_DEFINES
+ // Even if math.h was already included, including math.h again with
+ // _USE_MATH_DEFINES adds the extra defines.
+#include <math.h>
+#include <stdint.h>
+#endif
+
 const double piDouble = M_PI;
 const float piFloat = static_cast<float>(M_PI);
 

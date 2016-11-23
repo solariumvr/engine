@@ -8,7 +8,7 @@
 #include "flutter/shell/common/platform_view.h"
 #include "flutter/shell/platform/android/android_environment_gl.h"
 #include "flutter/shell/platform/android/android_native_window.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "lib/ftl/memory/ref_counted.h"
 #include "lib/ftl/memory/ref_ptr.h"
 #include "third_party/skia/include/core/SkSize.h"
@@ -58,7 +58,7 @@ class AndroidContextGL : public ftl::RefCountedThreadSafe<AndroidContextGL> {
 
   FRIEND_MAKE_REF_COUNTED(AndroidContextGL);
   FRIEND_REF_COUNTED_THREAD_SAFE(AndroidContextGL);
-  FTL_DISALLOW_COPY_AND_ASSIGN(AndroidContextGL);
+  DISALLOW_COPY_AND_ASSIGN(AndroidContextGL);
 };
 
 }  // namespace shell

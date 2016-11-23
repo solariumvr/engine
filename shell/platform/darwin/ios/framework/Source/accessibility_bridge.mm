@@ -9,7 +9,7 @@
 
 #import <UIKit/UIKit.h>
 
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "flutter/shell/platform/darwin/ios/platform_view_ios.h"
 
 namespace {
@@ -30,7 +30,7 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
     case UIAccessibilityScrollDirectionDown:
       return blink::SemanticsAction::kScrollDown;
   }
-  FTL_DCHECK(false); // Unreachable
+  DCHECK(false); // Unreachable
   return blink::SemanticsAction::kScrollDown;
 }
 
@@ -55,8 +55,8 @@ blink::SemanticsAction GetSemanticsActionForScrollDirection(
 
 - (instancetype)initWithBridge:(shell::AccessibilityBridge*)bridge
                            uid:(int32_t)uid {
-  FTL_DCHECK(bridge != nil) << "bridge must be set";
-  FTL_DCHECK(uid >= kRootNodeId);
+  DCHECK(bridge != nil) << "bridge must be set";
+  DCHECK(uid >= kRootNodeId);
   self = [super init];
 
   if (self) {

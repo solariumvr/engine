@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace shell {
 
@@ -52,7 +52,7 @@ class TracingController {
   std::string TracePathWithExtension(const std::string& directory,
                                      const std::string& extension) const;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(TracingController);
+  DISALLOW_COPY_AND_ASSIGN(TracingController);
 };
 
 }  // namespace shell

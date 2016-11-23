@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "flutter/sky/engine/platform/fonts/FontCache.h"
 
 namespace blink {

@@ -26,7 +26,7 @@ RuntimeController::RuntimeController(RuntimeDelegate* client)
 RuntimeController::~RuntimeController() {}
 
 void RuntimeController::CreateDartController(const std::string& script_uri) {
-  FTL_DCHECK(!dart_controller_);
+  DCHECK(!dart_controller_);
 
   dart_controller_.reset(new DartController());
   dart_controller_->CreateIsolateFor(

@@ -4,13 +4,13 @@
 
 #include "flutter/runtime/dart_init.h"
 
-#include <dlfcn.h>
+//#include <dlfcn.h>
 #include <fcntl.h>
 #include <string.h>
-#include <sys/mman.h>
+//#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 #include <memory>
 #include <string>
@@ -33,7 +33,7 @@
 #include "lib/ftl/build_config.h"
 #include "lib/ftl/files/eintr_wrapper.h"
 #include "lib/ftl/files/unique_fd.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "lib/ftl/time/time_delta.h"
 #include "lib/tonic/converter/dart_converter.h"
 #include "lib/tonic/dart_class_library.h"
@@ -134,10 +134,10 @@ RegisterNativeServiceProtocolExtensionHook
 void IsolateShutdownCallback(void* callback_data) {
   if (tonic::DartStickyError::IsSet()) {
     tonic::DartApiScope api_scope;
-    FTL_LOG(ERROR) << "Isolate " << tonic::StdStringFromDart(Dart_DebugName())
+    LOG(ERROR) << "Isolate " << tonic::StdStringFromDart(Dart_DebugName())
                    << " exited with an error";
     Dart_Handle sticky_error = Dart_GetStickyError();
-    FTL_CHECK(LogIfError(sticky_error));
+    CHECK(LogIfError(sticky_error));
   }
   tonic::DartState* dart_state = static_cast<tonic::DartState*>(callback_data);
   delete dart_state;
@@ -208,10 +208,10 @@ Dart_Isolate ServiceIsolateCreateCallback(const char* script_uri,
       script_uri, "main",
       reinterpret_cast<const uint8_t*>(DART_SYMBOL(kIsolateSnapshot)), nullptr,
       dart_state, error);
-  FTL_CHECK(isolate) << error;
+  CHECK(isolate) << error;
   dart_state->SetIsolate(isolate);
-  FTL_CHECK(Dart_IsServiceIsolate(isolate));
-  FTL_CHECK(!LogIfError(
+  CHECK(Dart_IsServiceIsolate(isolate));
+  CHECK(!LogIfError(
       Dart_SetLibraryTagHandler(tonic::DartState::HandleLibraryTag)));
   {
     tonic::DartApiScope dart_api_scope;
@@ -226,7 +226,7 @@ Dart_Isolate ServiceIsolateCreateCallback(const char* script_uri,
       const bool service_isolate_booted = DartServiceIsolate::Startup(
           ip, port, tonic::DartState::HandleLibraryTag,
           IsRunningPrecompiledCode(), disable_websocket_origin_check, error);
-      FTL_CHECK(service_isolate_booted) << error;
+      CHECK(service_isolate_booted) << error;
     }
 
     if (g_service_isolate_hook)
@@ -266,7 +266,7 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
   std::string entry_path;
   if (!IsRunningPrecompiledCode()) {
     // Assert that entry script URI starts with file://
-    FTL_CHECK(entry_uri.find(kFileUriPrefix) == 0u);
+    CHECK(entry_uri.find(kFileUriPrefix) == 0u);
     // Entry script path (file:// is stripped).
     entry_path = std::string(script_uri + strlen(kFileUriPrefix));
     if (!running_from_source) {
@@ -286,9 +286,9 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
       script_uri, main,
       reinterpret_cast<uint8_t*>(DART_SYMBOL(kIsolateSnapshot)), nullptr,
       dart_state, error);
-  FTL_CHECK(isolate) << error;
+  CHECK(isolate) << error;
   dart_state->SetIsolate(isolate);
-  FTL_CHECK(!LogIfError(
+  CHECK(!LogIfError(
       Dart_SetLibraryTagHandler(tonic::DartState::HandleLibraryTag)));
 
   {
@@ -312,7 +312,7 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
 
     if (!snapshot_data.empty()) {
       // We are running from a script snapshot.
-      FTL_CHECK(!LogIfError(Dart_LoadScriptFromSnapshot(snapshot_data.data(),
+      CHECK(!LogIfError(Dart_LoadScriptFromSnapshot(snapshot_data.data(),
                                                         snapshot_data.size())));
     } else if (running_from_source) {
       // We are running from source.
@@ -322,10 +322,10 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
       const std::string& packages = parent_loader.packages();
       tonic::FileLoader& loader = dart_state->file_loader();
       if (!packages.empty() && !loader.LoadPackagesMap(packages)) {
-        FTL_LOG(WARNING) << "Failed to load package map: " << packages;
+        LOG(WARNING) << "Failed to load package map: " << packages;
       }
       // Load the script.
-      FTL_CHECK(!LogIfError(loader.LoadScript(entry_path)));
+      CHECK(!LogIfError(loader.LoadScript(entry_path)));
     }
 
     dart_state->isolate_client()->DidCreateSecondaryIsolate(isolate);
@@ -333,7 +333,7 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
 
   Dart_ExitIsolate();
 
-  FTL_CHECK(Dart_IsolateMakeRunnable(isolate));
+  CHECK(Dart_IsolateMakeRunnable(isolate));
   return isolate;
 }
 
@@ -460,7 +460,7 @@ void* _DartSymbolLookup(const char* symbol_name) {
 
     const Settings& settings = Settings::Get();
     const std::string& aot_snapshot_path = settings.aot_snapshot_path;
-    FTL_CHECK(!aot_snapshot_path.empty());
+    CHECK(!aot_snapshot_path.empty());
 
     const char* file_name = symbol_asset.file_name;
     const std::string* settings_override = reinterpret_cast<const std::string*>(
@@ -550,13 +550,13 @@ static void EmbedderTimelineStopRecording() {
 }
 
 void SetServiceIsolateHook(ServiceIsolateHook hook) {
-  FTL_CHECK(!g_service_isolate_initialized);
+  CHECK(!g_service_isolate_initialized);
   g_service_isolate_hook = hook;
 }
 
 void SetRegisterNativeServiceProtocolExtensionHook(
     RegisterNativeServiceProtocolExtensionHook hook) {
-  FTL_CHECK(!g_service_isolate_initialized);
+  CHECK(!g_service_isolate_initialized);
   g_register_native_service_protocol_extensions_hook = hook;
 }
 
@@ -630,7 +630,7 @@ void InitDartVM() {
   for (size_t i = 0; i < settings.dart_flags.size(); i++)
     args.push_back(settings.dart_flags[i].c_str());
 
-  FTL_CHECK(Dart_SetVMFlags(args.size(), args.data()));
+  CHECK(Dart_SetVMFlags(args.size(), args.data()));
 
 #if FLUTTER_RUNTIME_MODE != FLUTTER_RUNTIME_MODE_RELEASE
   {
@@ -666,7 +666,7 @@ void InitDartVM() {
     params.get_service_assets = GetVMServiceAssetsArchiveCallback;
     char* init_error = Dart_Initialize(&params);
     if (init_error != nullptr)
-      FTL_LOG(FATAL) << "Error while initializing the Dart VM: " << init_error;
+      LOG(FATAL) << "Error while initializing the Dart VM: " << init_error;
     free(init_error);
 
     // Send the earliest available timestamp in the application lifecycle to

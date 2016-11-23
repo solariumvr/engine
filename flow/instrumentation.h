@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "lib/ftl/time/time_delta.h"
 #include "lib/ftl/time/time_point.h"
 #include "third_party/skia/include/core/SkCanvas.h"
@@ -29,7 +29,7 @@ class Stopwatch {
    private:
     Stopwatch& stopwatch_;
 
-    FTL_DISALLOW_COPY_AND_ASSIGN(ScopedLap);
+    DISALLOW_COPY_AND_ASSIGN(ScopedLap);
   };
 
   explicit Stopwatch();
@@ -48,7 +48,7 @@ class Stopwatch {
   std::vector<ftl::TimeDelta> laps_;
   size_t current_sample_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(Stopwatch);
+  DISALLOW_COPY_AND_ASSIGN(Stopwatch);
 };
 
 class Counter {
@@ -62,7 +62,7 @@ class Counter {
  private:
   size_t count_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(Counter);
+  DISALLOW_COPY_AND_ASSIGN(Counter);
 };
 
 }  // namespace flow

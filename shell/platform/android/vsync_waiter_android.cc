@@ -7,7 +7,7 @@
 #include <utility>
 
 #include "jni/VsyncWaiter_jni.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "flutter/common/threads.h"
 
 namespace shell {
@@ -17,10 +17,10 @@ VsyncWaiterAndroid::VsyncWaiterAndroid() : weak_factory_(this) {}
 VsyncWaiterAndroid::~VsyncWaiterAndroid() = default;
 
 void VsyncWaiterAndroid::AsyncWaitForVsync(Callback callback) {
-  FTL_DCHECK(!callback_);
+  DCHECK(!callback_);
   callback_ = std::move(callback);
-  ftl::WeakPtr<VsyncWaiterAndroid>* weak =
-      new ftl::WeakPtr<VsyncWaiterAndroid>();
+  base::WeakPtr<VsyncWaiterAndroid>* weak =
+      new base::WeakPtr<VsyncWaiterAndroid>();
   *weak = weak_factory_.GetWeakPtr();
 
   blink::Threads::Platform()->PostTask([weak] {
@@ -43,8 +43,8 @@ static void OnVsync(JNIEnv* env,
                     jclass jcaller,
                     jlong frameTimeNanos,
                     jlong cookie) {
-  ftl::WeakPtr<VsyncWaiterAndroid>* weak =
-      reinterpret_cast<ftl::WeakPtr<VsyncWaiterAndroid>*>(cookie);
+  base::WeakPtr<VsyncWaiterAndroid>* weak =
+      reinterpret_cast<base::WeakPtr<VsyncWaiterAndroid>*>(cookie);
   VsyncWaiterAndroid* waiter = weak->get();
   delete weak;
   if (waiter)

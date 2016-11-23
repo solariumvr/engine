@@ -14,7 +14,7 @@
 #include "flutter/lib/ui/window/platform_message.h"
 #include "flutter/shell/common/platform_view.h"
 #include "flutter/shell/platform/android/android_surface_gl.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -118,7 +118,7 @@ class PlatformViewAndroid : public PlatformView {
                         jobject* pixels_out,
                         SkISize* size_out);
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformViewAndroid);
+  DISALLOW_COPY_AND_ASSIGN(PlatformViewAndroid);
 };
 
 }  // namespace shell

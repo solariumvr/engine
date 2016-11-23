@@ -6,7 +6,7 @@
 
 #include "flutter/common/threads.h"
 #include "flutter/flow/raster_cache.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 
 namespace flow {
 
@@ -30,7 +30,7 @@ void PictureLayer::Preroll(PrerollContext* context, const SkMatrix& matrix) {
 }
 
 void PictureLayer::Paint(PaintContext& context) {
-  FTL_DCHECK(picture_);
+  DCHECK(picture_);
 
   TRACE_EVENT1("flutter", "PictureLayer::Paint", "image",
                image_ ? "prerolled" : "normal");

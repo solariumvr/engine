@@ -13,7 +13,7 @@
 #include "flutter/shell/common/rasterizer.h"
 #include "flutter/shell/common/shell.h"
 #include "flutter/shell/common/picture_serializer.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "lib/tonic/dart_binding_macros.h"
 #include "lib/tonic/dart_library_natives.h"
 #include "lib/tonic/logging/dart_invoke.h"
@@ -41,12 +41,12 @@ constexpr char kDiagnosticServerScript[] = "/diagnostic_server.dart";
 Dart_NativeFunction GetNativeFunction(Dart_Handle name,
                                       int argument_count,
                                       bool* auto_setup_scope) {
-  FTL_CHECK(g_natives);
+  CHECK(g_natives);
   return g_natives->GetNativeFunction(name, argument_count, auto_setup_scope);
 }
 
 const uint8_t* GetSymbol(Dart_NativeFunction native_function) {
-  FTL_CHECK(g_natives);
+  CHECK(g_natives);
   return g_natives->GetSymbol(native_function);
 }
 
@@ -74,7 +74,7 @@ void DiagnosticServer::Start() {
   const char* source = nullptr;
   int source_length =
       resources.ResourceLookup(kDiagnosticServerScript, &source);
-  FTL_DCHECK(source_length != EmbedderResources::kNoSuchInstance);
+  DCHECK(source_length != EmbedderResources::kNoSuchInstance);
 
   Dart_Handle diagnostic_library = Dart_LoadLibrary(
       Dart_NewStringFromCString("dart:diagnostic_server"), Dart_Null(),
@@ -82,27 +82,27 @@ void DiagnosticServer::Start() {
                              source_length),
       0, 0);
 
-  FTL_CHECK(!LogIfError(diagnostic_library));
-  FTL_CHECK(!LogIfError(Dart_SetNativeResolver(diagnostic_library,
+  CHECK(!LogIfError(diagnostic_library));
+  CHECK(!LogIfError(Dart_SetNativeResolver(diagnostic_library,
                                                GetNativeFunction, GetSymbol)));
 
-  FTL_CHECK(!LogIfError(Dart_LibraryImportLibrary(
+  CHECK(!LogIfError(Dart_LibraryImportLibrary(
       Dart_RootLibrary(), diagnostic_library, Dart_Null())));
 
-  FTL_CHECK(!LogIfError(Dart_FinalizeLoading(false)));
+  CHECK(!LogIfError(Dart_FinalizeLoading(false)));
 
   DartInvokeField(Dart_RootLibrary(), "diagnosticServerStart", {});
 }
 
 void DiagnosticServer::HandleSkiaPictureRequest(Dart_Handle send_port) {
   Dart_Port port_id;
-  FTL_CHECK(!LogIfError(Dart_SendPortGetId(send_port, &port_id)));
+  CHECK(!LogIfError(Dart_SendPortGetId(send_port, &port_id)));
 
   blink::Threads::Gpu()->PostTask([port_id]() { SkiaPictureTask(port_id); });
 }
 
 void DiagnosticServer::SkiaPictureTask(Dart_Port port_id) {
-  std::vector<ftl::WeakPtr<Rasterizer>> rasterizers;
+  std::vector<base::WeakPtr<Rasterizer>> rasterizers;
   Shell::Shared().GetRasterizers(&rasterizers);
   if (rasterizers.size() != 1) {
     SendNull(port_id);

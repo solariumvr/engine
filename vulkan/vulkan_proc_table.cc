@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 #include "vulkan_proc_table.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 
 #include <dlfcn.h>
 
@@ -33,7 +33,7 @@ bool VulkanProcTable::OpenLibraryHandle() {
   dlerror();  // clear existing errors on thread.
   handle_ = dlopen("libvulkan.so", RTLD_NOW);
   if (handle_ == nullptr) {
-    FTL_DLOG(WARNING) << "Could not open the vulkan library: " << dlerror();
+    DLOG(WARNING) << "Could not open the vulkan library: " << dlerror();
     return false;
   }
   return true;
@@ -43,9 +43,9 @@ bool VulkanProcTable::CloseLibraryHandle() {
   if (handle_ != nullptr) {
     dlerror();  // clear existing errors on thread.
     if (dlclose(handle_) != 0) {
-      FTL_DLOG(ERROR) << "Could not close the vulkan library handle. This "
+      DLOG(ERROR) << "Could not close the vulkan library handle. This "
                          "indicates a leak.";
-      FTL_DLOG(ERROR) << dlerror();
+      DLOG(ERROR) << dlerror();
     }
     handle_ = nullptr;
   }
@@ -61,7 +61,7 @@ bool VulkanProcTable::AcquireProcs() {
 #define ACQUIRE_PROC(symbol, name)                                       \
   if (!(symbol = reinterpret_cast<decltype(symbol)::Proto>(              \
             dlsym(handle_, name)))) {                                    \
-    FTL_DLOG(WARNING) << "Could not acquire proc for function " << name; \
+    DLOG(WARNING) << "Could not acquire proc for function " << name; \
     return false;                                                        \
   }
 

@@ -11,7 +11,7 @@
 #include "flutter/common/threads.h"
 #include "flutter/runtime/dart_init.h"
 #include "flutter/shell/common/shell.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 
 namespace shell {
 
@@ -37,7 +37,7 @@ ConstructDartTimelineValue(std::vector<void*>& free_list,
   va_list args;
   va_start(args, format);
   char* string;
-  if (vasprintf(&string, format, args) != -1) {
+  if (vsprintf(string, format, args) != -1) {
     return_value = string;
     free_list.push_back(string);
   } else {
@@ -48,7 +48,7 @@ ConstructDartTimelineValue(std::vector<void*>& free_list,
   return return_value;
 }
 
-static void BaseTraceEventCallback(base::TraceTicks timestamp,
+static void BaseTraceEventCallback(base::ThreadTicks timestamp,
                                    char phase,
                                    const unsigned char* category_group_enabled,
                                    const char* name,
@@ -84,7 +84,7 @@ static void BaseTraceEventCallback(base::TraceTicks timestamp,
       // discrete begin-end pairs. This greatly simplifies things. We dont have
       // to track the second timestamp to pass to the Dart timeline event
       // because we never see a Dart_Timeline_Event_Duration event.
-      FTL_DCHECK(false) << "Unknown trace event phase";
+      DCHECK(false) << "Unknown trace event phase";
       return;
   }
 

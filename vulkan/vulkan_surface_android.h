@@ -5,7 +5,7 @@
 #ifndef FLUTTER_VULKAN_VULKAN_SURFACE_ANDROID_H_
 #define FLUTTER_VULKAN_VULKAN_SURFACE_ANDROID_H_
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "vulkan_surface.h"
 
 struct ANativeWindow;
@@ -29,7 +29,7 @@ class VulkanSurfaceAndroid : public VulkanSurface {
  private:
   ANativeWindow* native_window_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(VulkanSurfaceAndroid);
+  DISALLOW_COPY_AND_ASSIGN(VulkanSurfaceAndroid);
 };
 
 }  // namespace vulkan

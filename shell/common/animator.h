@@ -11,14 +11,14 @@
 #include "flutter/synchronization/pipeline.h"
 #include "flutter/synchronization/semaphore.h"
 #include "lib/ftl/memory/ref_ptr.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "lib/ftl/time/time_point.h"
 
 namespace shell {
 
 class Animator {
  public:
-  Animator(ftl::WeakPtr<Rasterizer> rasterizer,
+  Animator(base::WeakPtr<Rasterizer> rasterizer,
            VsyncWaiter* waiter,
            Engine* engine);
 
@@ -39,7 +39,7 @@ class Animator {
 
   void AwaitVSync();
 
-  ftl::WeakPtr<Rasterizer> rasterizer_;
+  base::WeakPtr<Rasterizer> rasterizer_;
   VsyncWaiter* waiter_;
   Engine* engine_;
 
@@ -49,9 +49,9 @@ class Animator {
   LayerTreePipeline::ProducerContinuation producer_continuation_;
   bool paused_;
 
-  ftl::WeakPtrFactory<Animator> weak_factory_;
+  base::WeakPtrFactory<Animator> weak_factory_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(Animator);
+  DISALLOW_COPY_AND_ASSIGN(Animator);
 };
 
 }  // namespace shell

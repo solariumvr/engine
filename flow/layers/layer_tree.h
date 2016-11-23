@@ -11,7 +11,7 @@
 
 #include "flutter/flow/compositor_context.h"
 #include "flutter/flow/layers/layer.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "lib/ftl/time/time_delta.h"
 #include "third_party/skia/include/core/SkSize.h"
 
@@ -84,7 +84,7 @@ class LayerTree {
   uint32_t rasterizer_tracing_threshold_;
   bool checkerboard_raster_cache_images_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(LayerTree);
+  DISALLOW_COPY_AND_ASSIGN(LayerTree);
 };
 
 }  // namespace flow

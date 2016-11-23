@@ -4,7 +4,7 @@
 
 #include "flutter/shell/common/vsync_waiter_fallback.h"
 
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "flutter/common/threads.h"
 
 namespace shell {
@@ -27,7 +27,7 @@ VsyncWaiterFallback::VsyncWaiterFallback()
 VsyncWaiterFallback::~VsyncWaiterFallback() = default;
 
 void VsyncWaiterFallback::AsyncWaitForVsync(Callback callback) {
-  FTL_DCHECK(!callback_);
+  DCHECK(!callback_);
   callback_ = std::move(callback);
 
   constexpr ftl::TimeDelta interval = ftl::TimeDelta::FromSecondsF(1.0 / 60.0);

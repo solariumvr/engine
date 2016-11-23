@@ -35,7 +35,7 @@ void ImageShader::initWithImage(CanvasImage* image,
                                 SkShader::TileMode tmx,
                                 SkShader::TileMode tmy,
                                 const tonic::Float64List& matrix4) {
-  FTL_DCHECK(image != NULL);
+  DCHECK(image != NULL);
   SkMatrix sk_matrix = ToSkMatrix(matrix4);
   SkBitmap bitmap;
   image->image()->asLegacyBitmap(&bitmap, SkImage::kRO_LegacyBitmapMode);

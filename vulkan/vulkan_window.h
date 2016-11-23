@@ -9,7 +9,7 @@
 #include <tuple>
 #include <vector>
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "vulkan_handle.h"
 #include "vulkan_proc_table.h"
 #include "vulkan_backbuffer.h"
@@ -58,7 +58,7 @@ class VulkanWindow {
 
   std::pair<bool, VkPresentModeKHR> ChoosePresentMode();
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(VulkanWindow);
+  DISALLOW_COPY_AND_ASSIGN(VulkanWindow);
 };
 
 }  // namespace vulkan

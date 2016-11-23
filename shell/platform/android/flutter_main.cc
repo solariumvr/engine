@@ -23,7 +23,7 @@
 #include "flutter/runtime/start_up.h"
 #include "flutter/shell/common/shell.h"
 #include "jni/FlutterMain_jni.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 using base::LazyInstance;
 

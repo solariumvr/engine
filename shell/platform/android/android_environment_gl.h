@@ -5,7 +5,7 @@
 #ifndef FLUTTER_SHELL_PLATFORM_ANDROID_ANDROID_ENVIRONMENT_GL_H_
 #define FLUTTER_SHELL_PLATFORM_ANDROID_ANDROID_ENVIRONMENT_GL_H_
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "lib/ftl/memory/ref_counted.h"
 
 #include <EGL/egl.h>
@@ -32,7 +32,7 @@ class AndroidEnvironmentGL
 
   FRIEND_MAKE_REF_COUNTED(AndroidEnvironmentGL);
   FRIEND_REF_COUNTED_THREAD_SAFE(AndroidEnvironmentGL);
-  FTL_DISALLOW_COPY_AND_ASSIGN(AndroidEnvironmentGL);
+  DISALLOW_COPY_AND_ASSIGN(AndroidEnvironmentGL);
 };
 
 }  // namespace shell

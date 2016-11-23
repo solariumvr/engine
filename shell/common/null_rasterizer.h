@@ -6,8 +6,8 @@
 #define FLUTTER_SHELL_COMMON_NULL_RASTERIZER_H_
 
 #include "flutter/shell/common/rasterizer.h"
-#include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/macros.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -24,16 +24,16 @@ class NullRasterizer : public Rasterizer {
 
   void Clear(SkColor color, const SkISize& size) override;
 
-  ftl::WeakPtr<Rasterizer> GetWeakRasterizerPtr() override;
+  base::WeakPtr<Rasterizer> GetWeakRasterizerPtr() override;
 
   flow::LayerTree* GetLastLayerTree() override;
 
   void Draw(ftl::RefPtr<flutter::Pipeline<flow::LayerTree>> pipeline) override;
 
  private:
-  ftl::WeakPtrFactory<NullRasterizer> weak_factory_;
+  base::WeakPtrFactory<NullRasterizer> weak_factory_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(NullRasterizer);
+  DISALLOW_COPY_AND_ASSIGN(NullRasterizer);
 };
 
 }  // namespace shell

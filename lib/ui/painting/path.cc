@@ -11,6 +11,7 @@
 #include "lib/tonic/dart_binding_macros.h"
 #include "lib/tonic/converter/dart_converter.h"
 #include "lib/tonic/dart_library_natives.h"
+#include "flutter/sky/engine/wtf/MathExtras.h"
 
 namespace blink {
 

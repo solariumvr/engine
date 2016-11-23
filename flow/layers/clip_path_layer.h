@@ -23,7 +23,7 @@ class ClipPathLayer : public ContainerLayer {
  private:
   SkPath clip_path_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(ClipPathLayer);
+  DISALLOW_COPY_AND_ASSIGN(ClipPathLayer);
 };
 
 }  // namespace flow

@@ -9,9 +9,10 @@
 #include "flutter/synchronization/pipeline.h"
 #include "flutter/synchronization/semaphore.h"
 #include "lib/ftl/functional/closure.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "lib/ftl/memory/ref_counted.h"
-#include "lib/ftl/synchronization/mutex.h"
+//#include "lib/ftl/synchronization/mutex.h"
+#include "base/synchronization/lock.h"
 
 #include <memory>
 #include <queue>
@@ -77,7 +78,7 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
       TRACE_EVENT_ASYNC_BEGIN0("flutter", "PipelineProduce", trace_id_);
     }
 
-    FTL_DISALLOW_COPY_AND_ASSIGN(ProducerContinuation);
+    DISALLOW_COPY_AND_ASSIGN(ProducerContinuation);
   };
 
   explicit Pipeline(uint32_t depth)
@@ -100,7 +101,7 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
 
   using Consumer = std::function<void(ResourcePtr)>;
 
-  FTL_WARN_UNUSED_RESULT
+//  FTL_WARN_UNUSED_RESULT
   PipelineConsumeResult Consume(Consumer consumer) {
     if (consumer == nullptr) {
       return PipelineConsumeResult::NoneAvailable;
@@ -115,7 +116,7 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
     size_t items_count = 0;
 
     {
-      ftl::MutexLocker lock(&queue_mutex_);
+      base::AutoLock lock(queue_mutex_);
       std::tie(resource, trace_id) = std::move(queue_.front());
       queue_.pop();
       items_count = queue_.size();
@@ -135,13 +136,13 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
  private:
   Semaphore empty_;
   Semaphore available_;
-  ftl::Mutex queue_mutex_;
+  base::Lock queue_mutex_;
   std::queue<std::pair<ResourcePtr, size_t>> queue_;
   std::atomic_size_t last_trace_id_;
 
   void ProducerCommit(ResourcePtr resource, size_t trace_id) {
     {
-      ftl::MutexLocker lock(&queue_mutex_);
+      base::AutoLock lock(queue_mutex_);
       queue_.emplace(std::move(resource), trace_id);
     }
 
@@ -149,7 +150,7 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
     available_.Signal();
   }
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(Pipeline);
+  DISALLOW_COPY_AND_ASSIGN(Pipeline);
 };
 
 }  // namespace flutter

@@ -12,7 +12,7 @@
 #include "flutter/flow/compositor_context.h"
 #include "flutter/flow/layers/layer_tree.h"
 #include "lib/ftl/functional/closure.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace flutter_runner {
 
@@ -30,7 +30,7 @@ class Rasterizer {
   std::unique_ptr<mozart::BufferProducer> buffer_producer_;
   flow::CompositorContext compositor_context_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(Rasterizer);
+  DISALLOW_COPY_AND_ASSIGN(Rasterizer);
 };
 
 }  // namespace flutter_runner

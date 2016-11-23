@@ -17,7 +17,7 @@
 #include "lib/ftl/files/file.h"
 #include "lib/ftl/files/symlink.h"
 #include "lib/ftl/files/unique_fd.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "lib/tonic/converter/dart_converter.h"
 #include "lib/tonic/file_loader/file_loader.h"
 
@@ -86,13 +86,13 @@ class DartScope {
 };
 
 void InitDartVM() {
-  FTL_CHECK(Dart_SetVMFlags(arraysize(kDartArgs), kDartArgs));
+  CHECK(Dart_SetVMFlags(arraysize(kDartArgs), kDartArgs));
   Dart_InitializeParams params = {};
   params.version = DART_INITIALIZE_PARAMS_CURRENT_VERSION;
   params.vm_isolate_snapshot = kVmIsolateSnapshot;
   char* error = Dart_Initialize(&params);
   if (error)
-    FTL_LOG(FATAL) << error;
+    LOG(FATAL) << error;
 }
 
 Dart_Isolate CreateDartIsolate() {
@@ -100,7 +100,7 @@ Dart_Isolate CreateDartIsolate() {
   Dart_Isolate isolate =
       Dart_CreateIsolate("dart:snapshot", "main", kIsolateSnapshot,
                          nullptr, nullptr, &error);
-  FTL_CHECK(isolate) << error;
+  CHECK(isolate) << error;
   Dart_ExitIsolate();
   return isolate;
 }
@@ -134,7 +134,7 @@ bool WriteDepfile(const std::string& path,
   std::string output = build_output + ":";
   for (const auto& dep : deps) {
     std::string file = dep;
-    FTL_DCHECK(!file.empty());
+    DCHECK(!file.empty());
     if (file[0] != '/')
       file = current_directory + "/" + file;
 
@@ -197,7 +197,7 @@ int CreateSnapshot(const ftl::CommandLine& command_line) {
     return 1;
 
   Dart_Isolate isolate = CreateDartIsolate();
-  FTL_CHECK(isolate) << "Failed to create isolate.";
+  CHECK(isolate) << "Failed to create isolate.";
 
   DartScope scope(isolate);
 
@@ -216,7 +216,7 @@ int CreateSnapshot(const ftl::CommandLine& command_line) {
     // The script has been loaded, print out the minimal dependencies to run.
     for (const auto& dep : loader.url_dependencies()) {
       std::string file = dep;
-      FTL_DCHECK(!file.empty());
+      DCHECK(!file.empty());
       std::cout << file << "\n";
     }
   } else {

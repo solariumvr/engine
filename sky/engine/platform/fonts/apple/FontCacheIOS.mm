@@ -37,7 +37,7 @@
 #include "base/logging.h"
 #include "base/mac/scoped_nsautorelease_pool.h"
 #include "base/mac/scoped_nsobject.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "flutter/sky/engine/platform/fonts/FontCache.h"
 
 namespace blink {
@@ -129,7 +129,7 @@ class FontFallbackSelector {
  private:
   CFRef<CTFontRef> _prototype;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(FontFallbackSelector);
+  DISALLOW_COPY_AND_ASSIGN(FontFallbackSelector);
 };
 
 static base::LazyInstance<FontFallbackSelector> g_fallback_selector =

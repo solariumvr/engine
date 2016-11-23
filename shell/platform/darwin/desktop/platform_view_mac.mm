@@ -16,6 +16,7 @@
 #include "flutter/shell/platform/darwin/desktop/vsync_waiter_mac.h"
 #include "lib/ftl/synchronization/waitable_event.h"
 
+
 namespace shell {
 
 PlatformViewMac::PlatformViewMac(NSOpenGLView* gl_view)

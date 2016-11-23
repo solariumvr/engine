@@ -7,9 +7,9 @@
 
 #include <functional>
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "vulkan_interface.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 
 namespace vulkan {
 
@@ -63,7 +63,7 @@ class VulkanHandle {
     disposer_ = nullptr;
   }
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(VulkanHandle);
+  DISALLOW_COPY_AND_ASSIGN(VulkanHandle);
 };
 
 }  // namespace vulkan

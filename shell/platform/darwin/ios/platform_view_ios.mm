@@ -267,7 +267,7 @@ class IOSGLContext {
   GLuint depth_stencil_packed_buffer_;
   GLintSize storage_size_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(IOSGLContext);
+  DISALLOW_COPY_AND_ASSIGN(IOSGLContext);
 };
 
 PlatformViewIOS::PlatformViewIOS(CAEAGLLayer* layer)
@@ -306,7 +306,7 @@ void PlatformViewIOS::SetupAndLoadFromSource(
       });
 }
 
-ftl::WeakPtr<PlatformViewIOS> PlatformViewIOS::GetWeakPtr() {
+base::WeakPtr<PlatformViewIOS> PlatformViewIOS::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 

@@ -6,7 +6,7 @@
 #define FLUTTER_SHELL_PLATFORM_ANDROID_ANDROID_NATIVE_WINDOW_H_
 
 #include <android/native_window.h>
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace shell {
 
@@ -27,7 +27,7 @@ class AndroidNativeWindow {
  private:
   Handle window_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(AndroidNativeWindow);
+  DISALLOW_COPY_AND_ASSIGN(AndroidNativeWindow);
 };
 
 }  // namespace shell

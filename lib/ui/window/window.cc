@@ -33,7 +33,7 @@ Dart_Handle ToByteData(const std::vector<uint8_t>& buffer) {
   Dart_TypedData_Type type;
   void* data = nullptr;
   intptr_t num_bytes = 0;
-  FTL_CHECK(!Dart_IsError(
+  CHECK(!Dart_IsError(
       Dart_TypedDataAcquireData(data_handle, &type, &data, &num_bytes)));
 
   memcpy(data, buffer.data(), num_bytes);

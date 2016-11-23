@@ -10,7 +10,7 @@
 #include "flutter/lib/ui/window/platform_message.h"
 #include "flutter/shell/platform/darwin/ios/framework/Headers/FlutterAsyncMessageListener.h"
 #include "flutter/shell/platform/darwin/ios/framework/Headers/FlutterMessageListener.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -32,7 +32,7 @@ class PlatformMessageRouter {
   std::unordered_map<std::string, NSObject<FlutterAsyncMessageListener>*>
       async_listeners_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformMessageRouter);
+  DISALLOW_COPY_AND_ASSIGN(PlatformMessageRouter);
 };
 
 }  // namespace shell

@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "flutter/assets/unzipper_provider.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "lib/ftl/memory/ref_counted.h"
 
 namespace blink {
@@ -24,7 +24,7 @@ class ZipAssetStore : public ftl::RefCountedThreadSafe<ZipAssetStore> {
  private:
   UnzipperProvider unzipper_provider_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(ZipAssetStore);
+  DISALLOW_COPY_AND_ASSIGN(ZipAssetStore);
 };
 
 }  // namespace blink

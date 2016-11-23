@@ -68,7 +68,7 @@ bool DartController::SendStartMessage(Dart_Handle root_library) {
   {
     // Temporarily exit the isolate while we make it runnable.
     Dart_Isolate isolate = dart_state()->isolate();
-    FTL_DCHECK(Dart_CurrentIsolate() == isolate);
+    DCHECK(Dart_CurrentIsolate() == isolate);
     Dart_ExitIsolate();
     Dart_IsolateMakeRunnable(isolate);
     Dart_EnterIsolate(isolate);
@@ -107,7 +107,7 @@ bool DartController::SendStartMessage(Dart_Handle root_library) {
 
 void DartController::RunFromPrecompiledSnapshot() {
   TRACE_EVENT0("flutter", "DartController::RunFromPrecompiledSnapshot");
-  FTL_DCHECK(Dart_CurrentIsolate() == nullptr);
+  DCHECK(Dart_CurrentIsolate() == nullptr);
   tonic::DartState::Scope scope(dart_state());
   if (SendStartMessage(Dart_RootLibrary()))
     exit(1);
@@ -125,7 +125,7 @@ void DartController::RunFromSource(const std::string& main,
   tonic::DartState::Scope scope(dart_state());
   tonic::FileLoader& loader = dart_state()->file_loader();
   if (!packages.empty() && !loader.LoadPackagesMap(ResolvePath(packages)))
-    FTL_LOG(WARNING) << "Failed to load package map: " << packages;
+    LOG(WARNING) << "Failed to load package map: " << packages;
   LogIfError(loader.LoadScript(main));
   if (SendStartMessage(Dart_RootLibrary()))
     exit(1);
@@ -138,14 +138,14 @@ void DartController::CreateIsolateFor(const std::string& script_uri,
       script_uri.c_str(), "main",
       reinterpret_cast<uint8_t*>(DART_SYMBOL(kIsolateSnapshot)), nullptr,
       static_cast<tonic::DartState*>(state.get()), &error);
-  FTL_CHECK(isolate) << error;
+  CHECK(isolate) << error;
   ui_dart_state_ = state.release();
   dart_state()->message_handler().Initialize(blink::Threads::UI());
 
   Dart_SetShouldPauseOnStart(Settings::Get().start_paused);
 
   ui_dart_state_->SetIsolate(isolate);
-  FTL_CHECK(!LogIfError(
+  CHECK(!LogIfError(
       Dart_SetLibraryTagHandler(tonic::DartState::HandleLibraryTag)));
 
   {

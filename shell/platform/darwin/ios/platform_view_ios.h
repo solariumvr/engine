@@ -12,8 +12,8 @@
 #include "flutter/shell/gpu/gpu_surface_gl.h"
 #include "flutter/shell/platform/darwin/ios/framework/Source/accessibility_bridge.h"
 #include "flutter/shell/platform/darwin/ios/framework/Source/platform_message_router.h"
-#include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/macros.h"
+#include "base/memory/weak_ptr.h"
 
 @class CAEAGLLayer;
 @class UIView;
@@ -34,7 +34,7 @@ class PlatformViewIOS : public PlatformView, public GPUSurfaceGLDelegate {
     return platform_message_router_;
   }
 
-  ftl::WeakPtr<PlatformViewIOS> GetWeakPtr();
+  base::WeakPtr<PlatformViewIOS> GetWeakPtr();
 
   void UpdateSurfaceSize();
 
@@ -63,13 +63,13 @@ class PlatformViewIOS : public PlatformView, public GPUSurfaceGLDelegate {
   std::unique_ptr<IOSGLContext> context_;
   PlatformMessageRouter platform_message_router_;
   std::unique_ptr<AccessibilityBridge> accessibility_bridge_;
-  ftl::WeakPtrFactory<PlatformViewIOS> weak_factory_;
+  base::WeakPtrFactory<PlatformViewIOS> weak_factory_;
 
   void SetupAndLoadFromSource(const std::string& assets_directory,
                               const std::string& main,
                               const std::string& packages);
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformViewIOS);
+  DISALLOW_COPY_AND_ASSIGN(PlatformViewIOS);
 };
 
 }  // namespace shell

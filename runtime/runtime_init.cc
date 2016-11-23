@@ -8,7 +8,7 @@
 #include "flutter/runtime/dart_init.h"
 #include "flutter/runtime/platform_impl.h"
 #include "flutter/sky/engine/public/web/Sky.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 
 namespace blink {
 namespace {
@@ -20,7 +20,7 @@ PlatformImpl* g_platform_impl = nullptr;
 void InitRuntime() {
   TRACE_EVENT0("flutter", "InitRuntime");
 
-  FTL_CHECK(!g_platform_impl);
+  CHECK(!g_platform_impl);
   g_platform_impl = new PlatformImpl();
   InitEngine(g_platform_impl);
   InitDartVM();

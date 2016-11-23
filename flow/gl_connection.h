@@ -5,7 +5,7 @@
 #ifndef FLOW_GL_CONNECTION_H_
 #define FLOW_GL_CONNECTION_H_
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "open_gl.h"
 
 #include <string>
@@ -72,7 +72,7 @@ class GLConnection {
   Version shading_language_version_;
   std::set<std::string> extensions_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(GLConnection);
+  DISALLOW_COPY_AND_ASSIGN(GLConnection);
 };
 
 }  // namespace flow

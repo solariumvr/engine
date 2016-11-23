@@ -11,7 +11,7 @@
 #include "flutter/shell/common/surface.h"
 #include "flutter/synchronization/pipeline.h"
 #include "lib/ftl/functional/closure.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "lib/ftl/synchronization/waitable_event.h"
 
 namespace shell {
@@ -29,7 +29,7 @@ class Rasterizer {
 
   virtual void Clear(SkColor color, const SkISize& size) = 0;
 
-  virtual ftl::WeakPtr<Rasterizer> GetWeakRasterizerPtr() = 0;
+  virtual base::WeakPtr<Rasterizer> GetWeakRasterizerPtr() = 0;
 
   virtual flow::LayerTree* GetLastLayerTree() = 0;
 

@@ -7,8 +7,8 @@
 
 #include "flutter/shell/common/surface.h"
 #include "flutter/synchronization/debug_thread_checker.h"
-#include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/macros.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -41,7 +41,7 @@ class GPUSurfaceGL : public Surface {
   GPUSurfaceGLDelegate* delegate_;
   sk_sp<GrContext> context_;
   sk_sp<SkSurface> cached_surface_;
-  ftl::WeakPtrFactory<GPUSurfaceGL> weak_factory_;
+  base::WeakPtrFactory<GPUSurfaceGL> weak_factory_;
 
   sk_sp<SkSurface> CreateSurface(const SkISize& size);
 
@@ -51,7 +51,7 @@ class GPUSurfaceGL : public Surface {
 
   bool SelectPixelConfig(GrPixelConfig* config);
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(GPUSurfaceGL);
+  DISALLOW_COPY_AND_ASSIGN(GPUSurfaceGL);
 };
 
 class GPUSurfaceFrameGL : public SurfaceFrame {
@@ -71,7 +71,7 @@ class GPUSurfaceFrameGL : public SurfaceFrame {
 
   bool PerformSubmit() override;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(GPUSurfaceFrameGL);
+  DISALLOW_COPY_AND_ASSIGN(GPUSurfaceFrameGL);
 };
 
 }  // namespace shell

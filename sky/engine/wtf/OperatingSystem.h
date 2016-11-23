@@ -55,7 +55,9 @@
 #endif
 
 /* Always OS(POSIX) */
-#define WTF_OS_POSIX 1
+//TODO(solarium) Always use OS(WIN)
+#define WTF_OS_POSIX 0
+#define WTF_OS_WIN 1 
 
 #ifdef __APPLE__
 /* OS(MACOSX) - Mac and iOS */

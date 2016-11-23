@@ -8,6 +8,7 @@
 
 #include "flutter/lib/ui/painting/image.h"
 #include "flutter/lib/ui/painting/matrix.h"
+#include "flutter/sky/engine/wtf/MathExtras.h"
 #include "lib/tonic/converter/dart_converter.h"
 #include "lib/tonic/dart_args.h"
 #include "lib/tonic/dart_binding_macros.h"
@@ -68,8 +69,8 @@ ftl::RefPtr<Canvas> Canvas::Create(PictureRecorder* recorder,
                                    double top,
                                    double right,
                                    double bottom) {
-  FTL_DCHECK(recorder);
-  FTL_DCHECK(!recorder->isRecording());
+  DCHECK(recorder);
+  DCHECK(!recorder->isRecording());
   ftl::RefPtr<Canvas> canvas = ftl::MakeRefCounted<Canvas>(
       recorder->BeginRecording(SkRect::MakeLTRB(left, top, right, bottom)));
   recorder->set_canvas(canvas);
@@ -264,7 +265,7 @@ void Canvas::drawPath(const CanvasPath* path,
                       const PaintData& paint_data) {
   if (!canvas_)
     return;
-  FTL_DCHECK(path);
+  DCHECK(path);
   canvas_->drawPath(path->path(), *paint.paint());
 }
 
@@ -275,7 +276,7 @@ void Canvas::drawImage(const CanvasImage* image,
                        const PaintData& paint_data) {
   if (!canvas_)
     return;
-  FTL_DCHECK(image);
+  DCHECK(image);
   canvas_->drawImage(image->image(), x, y, paint.paint());
 }
 
@@ -292,7 +293,7 @@ void Canvas::drawImageRect(const CanvasImage* image,
                            const PaintData& paint_data) {
   if (!canvas_)
     return;
-  FTL_DCHECK(image);
+  DCHECK(image);
   SkRect src = SkRect::MakeLTRB(src_left, src_top, src_right, src_bottom);
   SkRect dst = SkRect::MakeLTRB(dst_left, dst_top, dst_right, dst_bottom);
   canvas_->drawImageRect(image->image(), src, dst, paint.paint(),
@@ -312,7 +313,7 @@ void Canvas::drawImageNine(const CanvasImage* image,
                            const PaintData& paint_data) {
   if (!canvas_)
     return;
-  FTL_DCHECK(image);
+  DCHECK(image);
   SkRect center =
       SkRect::MakeLTRB(center_left, center_top, center_right, center_bottom);
   SkIRect icenter;
@@ -324,7 +325,7 @@ void Canvas::drawImageNine(const CanvasImage* image,
 void Canvas::drawPicture(Picture* picture) {
   if (!canvas_)
     return;
-  FTL_DCHECK(picture);
+  DCHECK(picture);
   canvas_->drawPicture(picture->picture().get());
 }
 

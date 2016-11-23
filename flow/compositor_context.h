@@ -10,7 +10,7 @@
 
 #include "flutter/flow/instrumentation.h"
 #include "flutter/flow/raster_cache.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "third_party/skia/include/core/SkPictureRecorder.h"
 
@@ -43,7 +43,7 @@ class CompositorContext {
 
     friend class CompositorContext;
 
-    FTL_DISALLOW_COPY_AND_ASSIGN(ScopedFrame);
+    DISALLOW_COPY_AND_ASSIGN(ScopedFrame);
   };
 
   CompositorContext();
@@ -74,7 +74,7 @@ class CompositorContext {
 
   void EndFrame(ScopedFrame& frame, bool enable_instrumentation);
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(CompositorContext);
+  DISALLOW_COPY_AND_ASSIGN(CompositorContext);
 };
 
 }  // namespace flow

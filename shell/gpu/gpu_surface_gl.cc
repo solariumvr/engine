@@ -7,7 +7,7 @@
 #include "flutter/flow/gl_connection.h"
 #include "flutter/glue/trace_event.h"
 #include "lib/ftl/arraysize.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "third_party/skia/include/core/SkSurface.h"
 #include "third_party/skia/include/gpu/GrContext.h"
 #include "third_party/skia/include/gpu/gl/GrGLInterface.h"
@@ -83,8 +83,8 @@ bool GPUSurfaceGL::Setup() {
 
   if (context_ == nullptr) {
     flow::GLConnection connection;
-    FTL_LOG(INFO) << "Failed to setup GL context. Aborting.";
-    FTL_LOG(INFO) << connection.Description();
+    LOG(INFO) << "Failed to setup GL context. Aborting.";
+    LOG(INFO) << connection.Description();
   }
 
   context_->setResourceCacheLimits(kMaxGaneshResourceCacheCount,

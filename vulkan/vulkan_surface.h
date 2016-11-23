@@ -5,7 +5,7 @@
 #ifndef FLUTTER_VULKAN_VULKAN_SURFACE_H_
 #define FLUTTER_VULKAN_VULKAN_SURFACE_H_
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "vulkan_handle.h"
 #include "vulkan_proc_table.h"
 
@@ -26,7 +26,7 @@ class VulkanSurface {
   virtual bool IsValid() const = 0;
 
  private:
-  FTL_DISALLOW_COPY_AND_ASSIGN(VulkanSurface);
+  DISALLOW_COPY_AND_ASSIGN(VulkanSurface);
 };
 
 }  // namespace vulkan

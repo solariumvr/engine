@@ -5,7 +5,8 @@
 #include "flutter/assets/zip_asset_store.h"
 
 #include <fcntl.h>
-#include <unistd.h>
+//Change(solarium)
+//#include <unistd.h>
 
 #include <utility>
 
@@ -36,13 +37,13 @@ bool ZipAssetStore::GetAsBuffer(const std::string& asset_name,
   result = unzGetCurrentFileInfo(unzipper.get(), &file_info, nullptr, 0,
                                  nullptr, 0, nullptr, 0);
   if (result != UNZ_OK) {
-    FTL_LOG(WARNING) << "unzGetCurrentFileInfo failed, error=" << result;
+    LOG(WARNING) << "unzGetCurrentFileInfo failed, error=" << result;
     return false;
   }
 
   result = unzOpenCurrentFile(unzipper.get());
   if (result != UNZ_OK) {
-    FTL_LOG(WARNING) << "unzOpenCurrentFile failed, error=" << result;
+    LOG(WARNING) << "unzOpenCurrentFile failed, error=" << result;
     return false;
   }
 

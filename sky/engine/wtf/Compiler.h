@@ -28,7 +28,7 @@
 
 /* COMPILER() - the compiler being used to build the project */
 #define COMPILER(WTF_FEATURE) (defined WTF_COMPILER_##WTF_FEATURE  && WTF_COMPILER_##WTF_FEATURE)
-
+#define WTF_COMPILER_MSVC 1
 /* ==== COMPILER() - the compiler being used to build the project ==== */
 
 /* COMPILER(CLANG) - Clang  */
@@ -37,6 +37,8 @@
 
 #define CLANG_PRAGMA(PRAGMA) _Pragma(PRAGMA)
 #endif
+
+
 
 #ifndef CLANG_PRAGMA
 #define CLANG_PRAGMA(PRAGMA)

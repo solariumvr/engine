@@ -21,7 +21,7 @@ void NullRasterizer::Teardown(
   teardown_completion_event->Signal();
 }
 
-ftl::WeakPtr<Rasterizer> NullRasterizer::GetWeakRasterizerPtr() {
+base::WeakPtr<Rasterizer> NullRasterizer::GetWeakRasterizerPtr() {
   return weak_factory_.GetWeakPtr();
 }
 

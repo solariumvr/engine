@@ -101,7 +101,7 @@ PassRefPtr<RenderStyle> decodeParagraphStyle(
     double fontSize,
     double lineHeight,
     const std::string& ellipsis) {
-  FTL_DCHECK(encoded.num_elements() == 5);
+  DCHECK(encoded.num_elements() == 5);
 
   RefPtr<RenderStyle> style = RenderStyle::create();
   style->inheritFrom(parentStyle);
@@ -221,7 +221,7 @@ void ParagraphBuilder::pushStyle(tonic::Int32List& encoded,
                                  double letterSpacing,
                                  double wordSpacing,
                                  double height) {
-  FTL_DCHECK(encoded.num_elements() == 8);
+  DCHECK(encoded.num_elements() == 8);
   RefPtr<RenderStyle> style = RenderStyle::create();
   style->inheritFrom(m_currentRenderObject->style());
 

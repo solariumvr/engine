@@ -11,7 +11,7 @@
 #include "flutter/lib/ui/ui_dart_state.h"
 #include "flutter/lib/ui/window/pointer_data_packet.h"
 #include "flutter/lib/ui/window/window.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace blink {
 class DartController;
@@ -63,7 +63,7 @@ class RuntimeController : public WindowClient, public IsolateClient {
   bool semantics_enabled_ = false;
   std::unique_ptr<DartController> dart_controller_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(RuntimeController);
+  DISALLOW_COPY_AND_ASSIGN(RuntimeController);
 };
 
 }  // namespace blink

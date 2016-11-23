@@ -52,11 +52,11 @@ class PlatformMessageResponseAndroid : public blink::PlatformMessageResponse {
 
  private:
   PlatformMessageResponseAndroid(int response_id,
-                                 ftl::WeakPtr<PlatformView> view)
+                                 base::WeakPtr<PlatformView> view)
       : response_id_(response_id), view_(view) {}
 
   int response_id_;
-  ftl::WeakPtr<PlatformView> view_;
+  base::WeakPtr<PlatformView> view_;
 };
 
 }  // namespace
@@ -382,9 +382,9 @@ void PlatformViewAndroid::UpdateSemantics(
 void PlatformViewAndroid::RunFromSource(const std::string& assets_directory,
                                         const std::string& main,
                                         const std::string& packages) {
-  FTL_CHECK(base::android::IsVMInitialized());
+  CHECK(base::android::IsVMInitialized());
   JNIEnv* env = base::android::AttachCurrentThread();
-  FTL_CHECK(env);
+  CHECK(env);
 
   {
     base::android::ScopedJavaLocalRef<jobject> local_flutter_view =
@@ -396,21 +396,21 @@ void PlatformViewAndroid::RunFromSource(const std::string& assets_directory,
 
     // Grab the class of the flutter view.
     jclass flutter_view_class = env->GetObjectClass(local_flutter_view.obj());
-    FTL_CHECK(flutter_view_class);
+    CHECK(flutter_view_class);
 
     // Grab the runFromSource method id.
     jmethodID run_from_source_method_id = env->GetMethodID(
         flutter_view_class, "runFromSource",
         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-    FTL_CHECK(run_from_source_method_id);
+    CHECK(run_from_source_method_id);
 
     // Invoke runFromSource on the Android UI thread.
     jstring java_assets_directory = env->NewStringUTF(assets_directory.c_str());
-    FTL_CHECK(java_assets_directory);
+    CHECK(java_assets_directory);
     jstring java_main = env->NewStringUTF(main.c_str());
-    FTL_CHECK(java_main);
+    CHECK(java_main);
     jstring java_packages = env->NewStringUTF(packages.c_str());
-    FTL_CHECK(java_packages);
+    CHECK(java_packages);
     env->CallVoidMethod(local_flutter_view.obj(), run_from_source_method_id,
                         java_assets_directory, java_main, java_packages);
   }
@@ -440,27 +440,27 @@ base::android::ScopedJavaLocalRef<jobject> PlatformViewAndroid::GetBitmap(
   base::android::ScopedJavaGlobalRef<jobject> pixels(env, pixels_ref);
 
   jclass bitmap_class = env->FindClass("android/graphics/Bitmap");
-  FTL_CHECK(bitmap_class);
+  CHECK(bitmap_class);
 
   jmethodID create_bitmap = env->GetStaticMethodID(
       bitmap_class, "createBitmap",
       "([IIILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-  FTL_CHECK(create_bitmap);
+  CHECK(create_bitmap);
 
   jclass bitmap_config_class = env->FindClass("android/graphics/Bitmap$Config");
-  FTL_CHECK(bitmap_config_class);
+  CHECK(bitmap_config_class);
 
   jmethodID bitmap_config_value_of = env->GetStaticMethodID(
       bitmap_config_class, "valueOf",
       "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;");
-  FTL_CHECK(bitmap_config_value_of);
+  CHECK(bitmap_config_value_of);
 
   jstring argb = env->NewStringUTF("ARGB_8888");
-  FTL_CHECK(argb);
+  CHECK(argb);
 
   jobject bitmap_config = env->CallStaticObjectMethod(
       bitmap_config_class, bitmap_config_value_of, argb);
-  FTL_CHECK(bitmap_config);
+  CHECK(bitmap_config);
 
   jobject bitmap = env->CallStaticObjectMethod(
       bitmap_class, create_bitmap, pixels.obj(), frame_size.width(),
@@ -477,15 +477,15 @@ void PlatformViewAndroid::GetBitmapGpuTask(ftl::AutoResetWaitableEvent* latch,
     return;
 
   JNIEnv* env = base::android::AttachCurrentThread();
-  FTL_CHECK(env);
+  CHECK(env);
 
   const SkISize& frame_size = layer_tree->frame_size();
   jsize pixels_size = frame_size.width() * frame_size.height();
   jintArray pixels_array = env->NewIntArray(pixels_size);
-  FTL_CHECK(pixels_array);
+  CHECK(pixels_array);
 
   jint* pixels = env->GetIntArrayElements(pixels_array, nullptr);
-  FTL_CHECK(pixels);
+  CHECK(pixels);
 
   SkImageInfo image_info =
       SkImageInfo::Make(frame_size.width(), frame_size.height(),

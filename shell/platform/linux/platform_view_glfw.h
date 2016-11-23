@@ -8,7 +8,7 @@
 #include <string>
 #include "flutter/shell/common/platform_view.h"
 #include "flutter/shell/gpu/gpu_surface_gl.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 
 struct GLFWwindow;
 
@@ -49,7 +49,7 @@ class PlatformViewGLFW : public PlatformView, public GPUSurfaceGLDelegate {
 
   void OnKeyEvent(int key, int scancode, int action, int mods);
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformViewGLFW);
+  DISALLOW_COPY_AND_ASSIGN(PlatformViewGLFW);
 };
 
 }  // namespace shell

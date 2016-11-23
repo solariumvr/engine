@@ -5,10 +5,10 @@
 #ifndef SHELL_PLATFORM_GLFW_MESSAGE_PUMP_GLFW_H_
 #define SHELL_PLATFORM_GLFW_MESSAGE_PUMP_GLFW_H_
 
-#include "lib/ftl/macros.h"
-#include "base/memory/scoped_ptr.h"
+#include "base/macros.h"
 #include "base/message_loop/message_pump.h"
 #include "base/time/time.h"
+#include <memory>
 
 namespace shell {
 
@@ -18,7 +18,7 @@ class MessagePumpGLFW : public base::MessagePump {
 
   ~MessagePumpGLFW() override;
 
-  static scoped_ptr<base::MessagePump> Create();
+  static std::unique_ptr<base::MessagePump> Create();
 
   void Run(Delegate* delegate) override;
 
@@ -33,7 +33,7 @@ class MessagePumpGLFW : public base::MessagePump {
   bool should_quit_;
   base::TimeTicks delayed_work_time_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(MessagePumpGLFW);
+  DISALLOW_COPY_AND_ASSIGN(MessagePumpGLFW);
 };
 
 }  // namespace shell

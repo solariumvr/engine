@@ -37,7 +37,11 @@
 #include "flutter/sky/engine/wtf/Noncopyable.h"
 #include "flutter/sky/engine/wtf/WTFExport.h"
 
-#if USE(PTHREADS)
+#if OS(WIN)
+#include <windows.h>
+#endif
+
+#if OS(POSIX)
 #include <pthread.h>
 #endif
 
@@ -51,6 +55,22 @@ struct PlatformMutex {
 #endif
 };
 typedef pthread_cond_t PlatformCondition;
+#elif OS(WIN)
+struct PlatformMutex {
+  CRITICAL_SECTION m_internalMutex;
+  size_t m_recursionCount;
+};
+struct PlatformCondition {
+  size_t m_waitersGone;
+  size_t m_waitersBlocked;
+  size_t m_waitersToUnblock;
+  HANDLE m_blockLock;
+  HANDLE m_blockQueue;
+  HANDLE m_unblockLock;
+
+  bool timedWait(PlatformMutex&, DWORD durationMilliseconds);
+  void signal(bool unblockAll);
+};
 #else
 typedef void* PlatformMutex;
 typedef void* PlatformCondition;

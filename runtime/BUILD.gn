@@ -72,7 +72,7 @@ source_set("runtime") {
     "//flutter/glue",
     "//flutter/lib/io",
     "//flutter/lib/ui",
-    "//flutter/skia",
+    "//skia",
     "//flutter/sky/engine/platform",
     "//lib/ftl",
     "//lib/tonic",

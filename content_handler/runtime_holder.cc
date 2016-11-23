@@ -17,7 +17,7 @@
 #include "lib/fidl/dart/sdk_ext/src/handle_watcher.h"
 #include "lib/fidl/dart/sdk_ext/src/natives.h"
 #include "lib/ftl/functional/make_copyable.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 #include "lib/ftl/time/time_delta.h"
 #include "lib/tonic/mx/mx_converter.h"
 #include "lib/zip/create_unzipper.h"
@@ -88,7 +88,7 @@ void RuntimeHolder::Init(
     fidl::InterfaceHandle<modular::ApplicationEnvironment> environment,
     fidl::InterfaceRequest<modular::ServiceProvider> outgoing_services,
     std::vector<char> bundle) {
-  FTL_DCHECK(!rasterizer_);
+  DCHECK(!rasterizer_);
   rasterizer_.reset(new Rasterizer());
 
   environment_.Bind(std::move(environment));
@@ -106,13 +106,13 @@ void RuntimeHolder::CreateView(
   if (view_listener_binding_.is_bound()) {
     // TODO(jeffbrown): Refactor this to support multiple view instances
     // sharing the same underlying root bundle (but with different runtimes).
-    FTL_LOG(ERROR) << "The view has already been created.";
+    LOG(ERROR) << "The view has already been created.";
     return;
   }
 
   std::vector<uint8_t> snapshot;
   if (!asset_store_->GetAsBuffer(kSnapshotKey, &snapshot)) {
-    FTL_LOG(ERROR) << "Unable to load snapshot from root bundle.";
+    LOG(ERROR) << "Unable to load snapshot from root bundle.";
     return;
   }
 
@@ -284,7 +284,7 @@ void RuntimeHolder::OnEvent(mozart::EventPtr event,
       case blink::PointerData::Change::kAdd:
       case blink::PointerData::Change::kRemove:
       case blink::PointerData::Change::kHover:
-        FTL_DCHECK(down_pointers_.count(pointer_data.device) == 0);
+        DCHECK(down_pointers_.count(pointer_data.device) == 0);
         break;
     }
 
@@ -328,7 +328,7 @@ void RuntimeHolder::OnEvent(mozart::EventPtr event,
 
 void RuntimeHolder::OnInvalidation(mozart::ViewInvalidationPtr invalidation,
                                    const OnInvalidationCallback& callback) {
-  FTL_DCHECK(invalidation);
+  DCHECK(invalidation);
   pending_invalidation_ = false;
 
   // Apply view property changes.
@@ -349,7 +349,7 @@ void RuntimeHolder::OnInvalidation(mozart::ViewInvalidationPtr invalidation,
 
   // TODO(jeffbrown): Flow the frame time through the rendering pipeline.
   if (outstanding_requests_ >= kMaxPipelineDepth) {
-    FTL_DCHECK(!deferred_invalidation_callback_);
+    DCHECK(!deferred_invalidation_callback_);
     deferred_invalidation_callback_ = callback;
     return;
   }
@@ -364,16 +364,16 @@ void RuntimeHolder::OnInvalidation(mozart::ViewInvalidationPtr invalidation,
   callback();
 }
 
-ftl::WeakPtr<RuntimeHolder> RuntimeHolder::GetWeakPtr() {
+base::WeakPtr<RuntimeHolder> RuntimeHolder::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 
 void RuntimeHolder::BeginFrame() {
-  FTL_DCHECK(outstanding_requests_ > 0);
-  FTL_DCHECK(outstanding_requests_ <= kMaxPipelineDepth)
+  DCHECK(outstanding_requests_ > 0);
+  DCHECK(outstanding_requests_ <= kMaxPipelineDepth)
       << outstanding_requests_;
 
-  FTL_DCHECK(!is_ready_to_draw_);
+  DCHECK(!is_ready_to_draw_);
   is_ready_to_draw_ = true;
   runtime_->BeginFrame(ftl::TimePoint::Now());
   const bool was_ready_to_draw = is_ready_to_draw_;
@@ -387,7 +387,7 @@ void RuntimeHolder::BeginFrame() {
 }
 
 void RuntimeHolder::OnFrameComplete() {
-  FTL_DCHECK(outstanding_requests_ > 0);
+  DCHECK(outstanding_requests_ > 0);
   --outstanding_requests_;
 
   if (deferred_invalidation_callback_ &&

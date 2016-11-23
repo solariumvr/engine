@@ -11,16 +11,16 @@
 namespace shell {
 
 bool InitForTesting() {
-  base::CommandLine& command_line = *base::CommandLine::ForCurrentProcess();
+  //base::CommandLine& command_line = *base::CommandLine::ForCurrentProcess();
 
-  TestRunner::TestDescriptor test;
-  test.packages = command_line.GetSwitchValueASCII(switches::kPackages);
-  auto args = command_line.GetArgs();
-  if (args.empty())
-    return false;
-  test.path = args[0];
+  //TestRunner::TestDescriptor test;
+  //test.packages = command_line.GetSwitchValueASCII(switches::kPackages);
+  //auto args = command_line.GetArgs();
+  //if (args.empty())
+  //  return false;
+  //test.path = args[0];
 
-  TestRunner::Shared().Run(test);
+  //TestRunner::Shared().Run(test);
   return true;
 }
 

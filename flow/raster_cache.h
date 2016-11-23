@@ -9,8 +9,8 @@
 #include <unordered_map>
 
 #include "flutter/flow/instrumentation.h"
-#include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/macros.h"
+#include "base/memory/weak_ptr.h"
 #include "third_party/skia/include/core/SkImage.h"
 #include "third_party/skia/include/core/SkSize.h"
 
@@ -47,9 +47,9 @@ class RasterCache {
 
   Cache cache_;
   bool checkerboard_images_;
-  ftl::WeakPtrFactory<RasterCache> weak_factory_;
+  base::WeakPtrFactory<RasterCache> weak_factory_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(RasterCache);
+  DISALLOW_COPY_AND_ASSIGN(RasterCache);
 };
 
 }  // namespace flow

@@ -98,7 +98,7 @@ void Paragraph::paint(Canvas* canvas, double x, double y) {
   GraphicsContext context(skCanvas);
   Vector<RenderBox*> layers;
   LayoutRect bounds = box->absoluteBoundingBoxRect();
-  FTL_DCHECK(bounds.x() == 0 && bounds.y() == 0);
+  DCHECK(bounds.x() == 0 && bounds.y() == 0);
   PaintInfo paintInfo(&context, enclosingIntRect(bounds), box);
   box->paint(paintInfo, LayoutPoint(), layers);
   // Note we're ignoring any layers encountered.
@@ -133,7 +133,7 @@ std::vector<TextBox> Paragraph::getRectsForRange(unsigned start, unsigned end) {
 }
 
 int Paragraph::absoluteOffsetForPosition(const PositionWithAffinity& position) {
-  FTL_DCHECK(position.renderer());
+  DCHECK(position.renderer());
   unsigned offset = 0;
   for (RenderObject* object = m_renderView.get(); object;
        object = object->nextInPreOrder()) {
@@ -144,7 +144,7 @@ int Paragraph::absoluteOffsetForPosition(const PositionWithAffinity& position) {
       offset += text->textLength();
     }
   }
-  FTL_DCHECK(false);
+  DCHECK(false);
   return 0;
 }
 

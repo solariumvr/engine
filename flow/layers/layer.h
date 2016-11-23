@@ -12,8 +12,8 @@
 #include "flutter/flow/raster_cache.h"
 #include "flutter/glue/trace_event.h"
 #include "lib/ftl/build_config.h"
-#include "lib/ftl/logging.h"
-#include "lib/ftl/macros.h"
+#include "base/logging.h"
+#include "base/macros.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "third_party/skia/include/core/SkColor.h"
 #include "third_party/skia/include/core/SkColorFilter.h"
@@ -68,7 +68,7 @@ class Layer {
   bool has_paint_bounds() const { return has_paint_bounds_; }
 
   const SkRect& paint_bounds() const {
-    FTL_DCHECK(has_paint_bounds_);
+    DCHECK(has_paint_bounds_);
     return paint_bounds_;
   }
 
@@ -82,7 +82,7 @@ class Layer {
   bool has_paint_bounds_;  // if false, paint_bounds_ is not valid
   SkRect paint_bounds_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(Layer);
+  DISALLOW_COPY_AND_ASSIGN(Layer);
 };
 
 }  // namespace flow

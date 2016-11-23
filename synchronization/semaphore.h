@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 #include "lib/ftl/time/time_delta.h"
 #include "lib/ftl/compiler_specific.h"
 
@@ -23,7 +23,7 @@ class Semaphore {
 
   bool IsValid() const;
 
-  FTL_WARN_UNUSED_RESULT
+//  FTL_WARN_UNUSED_RESULT
   bool TryWait();
 
   void Signal();
@@ -31,7 +31,7 @@ class Semaphore {
  private:
   std::unique_ptr<PlatformSemaphore> _impl;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(Semaphore);
+  DISALLOW_COPY_AND_ASSIGN(Semaphore);
 };
 
 }  // namespace flutter

@@ -10,7 +10,7 @@
 #include "flutter/shell/platform/android/android_context_gl.h"
 #include "flutter/shell/platform/android/android_environment_gl.h"
 #include "flutter/shell/platform/android/android_native_window.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace shell {
 
@@ -44,7 +44,7 @@ class AndroidSurfaceGL : public GPUSurfaceGLDelegate {
   ftl::RefPtr<AndroidContextGL> onscreen_context_;
   ftl::RefPtr<AndroidContextGL> offscreen_context_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(AndroidSurfaceGL);
+  DISALLOW_COPY_AND_ASSIGN(AndroidSurfaceGL);
 };
 
 }  // namespace shell

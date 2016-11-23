@@ -6,11 +6,11 @@ executable("linux") {
   output_name = "sky_shell"
 
   sources = [
-    "main_linux.cc",
     "message_pump_glfw.cc",
     "message_pump_glfw.h",
     "platform_view_glfw.cc",
     "platform_view_glfw.h",
+    "main.cc",
   ]
 
   deps = [
@@ -19,12 +19,23 @@ executable("linux") {
     "//flutter/shell/common",
     "//flutter/shell/gpu",
     "//flutter/shell/testing",
-    "//flutter/skia",
+    "//skia",
     "//lib/ftl",
     "//third_party/glfw",
+    "//third_party/glad",
   ]
 
+
+if(!is_win){
   ldflags = [
     "-lGL",
   ]
+} else {
+    libs = [
+        "opengl32.lib"
+    ]
+    ldflags = [
+#        "-lgdi32"
+    ]
+}
 }

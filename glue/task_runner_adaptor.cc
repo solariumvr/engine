@@ -21,7 +21,7 @@ void RunClosure(ftl::Closure task) {
 
 TaskRunnerAdaptor::TaskRunnerAdaptor(scoped_refptr<base::TaskRunner> runner)
     : runner_(std::move(runner)) {
-  FTL_DCHECK(runner_);
+  DCHECK(runner_);
 }
 
 TaskRunnerAdaptor::~TaskRunnerAdaptor() {}

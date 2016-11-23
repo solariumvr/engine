@@ -39,7 +39,7 @@ class ChildSceneLayer : public Layer {
   uint32_t scene_token_;
   SkMatrix transform_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(ChildSceneLayer);
+  DISALLOW_COPY_AND_ASSIGN(ChildSceneLayer);
 };
 
 }  // namespace flow

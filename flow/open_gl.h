@@ -23,6 +23,10 @@
 
 #include <GL/gl.h>
 
+#elif defined(OS_WIN)
+
+#include "third_party/glad/include/glad/glad.h"
+
 #else
 
 #error OpenGL headers not found for this platform.

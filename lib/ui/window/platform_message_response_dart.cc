@@ -29,7 +29,7 @@ PlatformMessageResponseDart::~PlatformMessageResponseDart() {
 void PlatformMessageResponseDart::Complete(std::vector<uint8_t> data) {
   if (callback_.is_empty())
     return;
-  FTL_DCHECK(!is_complete_);
+  DCHECK(!is_complete_);
   is_complete_ = true;
   Threads::UI()->PostTask(ftl::MakeCopyable(
       [ callback = std::move(callback_), data = std::move(data) ]() mutable {
@@ -51,8 +51,8 @@ void PlatformMessageResponseDart::Complete(std::vector<uint8_t> data) {
           Dart_TypedData_Type type;
           DART_CHECK_VALID(
               Dart_TypedDataAcquireData(byte_buffer, &type, &buffer, &length));
-          FTL_CHECK(type == Dart_TypedData_kByteData);
-          FTL_CHECK(static_cast<size_t>(length) == data.size());
+          CHECK(type == Dart_TypedData_kByteData);
+          CHECK(static_cast<size_t>(length) == data.size());
           memcpy(buffer, data.data(), length);
           Dart_TypedDataReleaseData(byte_buffer);
         }

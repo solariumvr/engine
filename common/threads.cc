@@ -43,12 +43,12 @@ const ftl::RefPtr<ftl::TaskRunner>& Threads::IO() {
 }
 
 const Threads& Threads::Get() {
-  FTL_CHECK(g_threads);
+  CHECK(g_threads);
   return *g_threads;
 }
 
 void Threads::Set(const Threads& threads) {
-  FTL_CHECK(!g_threads);
+  CHECK(!g_threads);
   g_threads = new Threads();
   *g_threads = threads;
 }

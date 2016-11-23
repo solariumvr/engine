@@ -12,7 +12,7 @@
 
 #include "flutter/common/threads.h"
 #include "flutter/glue/trace_event.h"
-#include "lib/ftl/logging.h"
+#include "base/logging.h"
 
 @interface VSyncClient : NSObject
 
@@ -40,7 +40,7 @@
 }
 
 - (void)await:(shell::VsyncWaiter::Callback)callback {
-  FTL_DCHECK(!_pendingCallback);
+  DCHECK(!_pendingCallback);
   _pendingCallback = std::move(callback);
   _displayLink.paused = NO;
 }

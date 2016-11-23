@@ -13,7 +13,7 @@
 #include "apps/mozart/services/views/view_provider.fidl.h"
 #include "lib/fidl/cpp/bindings/binding.h"
 #include "lib/fidl/cpp/bindings/binding_set.h"
-#include "lib/ftl/macros.h"
+#include "base/macros.h"
 
 namespace flutter_runner {
 class App;
@@ -61,7 +61,7 @@ class ApplicationControllerImpl : public modular::ApplicationController,
   std::string url_;
   std::unique_ptr<RuntimeHolder> runtime_holder_;
 
-  FTL_DISALLOW_COPY_AND_ASSIGN(ApplicationControllerImpl);
+  DISALLOW_COPY_AND_ASSIGN(ApplicationControllerImpl);
 };
 
 }  // namespace flutter_runner
