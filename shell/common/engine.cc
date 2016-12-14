@@ -27,6 +27,7 @@
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "third_party/skia/include/core/SkPictureRecorder.h"
 #include "base/files/file_util.h"
+#include "base/files/file_path.h"
 
 #include <sys/stat.h>
 
@@ -55,9 +56,8 @@ std::string FindPackagesPath(const std::string& main_dart) {
   //std::string directory = files::GetDirectoryName(main_dart);
   std::string packages_path = directory + "/.packages";
   if (!PathExists(packages_path)) {
-		file_path.AppendASCII("..");
     //directory = files::GetDirectoryName(directory);
-		directory = file_path.DirName().MaybeAsASCII();
+		directory = file_path.DirName().DirName().MaybeAsASCII();
     packages_path = directory + "/.packages";
     if (!PathExists(packages_path))
       packages_path = std::string();
@@ -77,11 +77,12 @@ Engine::Engine(PlatformView* platform_view)
           platform_view->rasterizer().GetWeakRasterizerPtr(),
           platform_view->GetVsyncWaiter(),
           this)),
-      activity_running_(false),
+      activity_running_(true),
       have_surface_(false),
       weak_factory_(this) {}
 
-Engine::~Engine() {}
+Engine::~Engine() {
+}
 
 base::WeakPtr<Engine> Engine::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
@@ -302,8 +303,9 @@ void Engine::ConfigureAssetBundle(const std::string& path) {
   }
 
   if (S_ISREG(stat_result.st_mode)) {
+    base::FilePath tmp_path(path);
     asset_store_ = ftl::MakeRefCounted<blink::ZipAssetStore>(
-        blink::GetUnzipperProviderForPath(path));
+        blink::GetUnzipperProviderForPath(tmp_path.MaybeAsASCII()));
     return;
   }
 }
@@ -319,8 +321,9 @@ void Engine::ConfigureRuntime(const std::string& script_uri) {
 }
 
 void Engine::DidCreateMainIsolate(Dart_Isolate isolate) {
-  if (asset_store_)
+  if (asset_store_) {
     blink::AssetFontSelector::Install(asset_store_);
+  }
 }
 
 void Engine::DidCreateSecondaryIsolate(Dart_Isolate isolate) {}

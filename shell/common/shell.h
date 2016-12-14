@@ -83,6 +83,7 @@ class Shell {
                                  std::string* isolate_name,
                                  ftl::AutoResetWaitableEvent* latch);
 
+  std::unique_ptr<base::Thread> platform_thread_;
   std::unique_ptr<base::Thread> gpu_thread_;
   std::unique_ptr<base::Thread> ui_thread_;
   std::unique_ptr<base::Thread> io_thread_;

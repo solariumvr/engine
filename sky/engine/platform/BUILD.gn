@@ -247,8 +247,9 @@ source_set("platform") {
 
   public_deps = [
     "//flutter/common",
-    "//flutter/skia",
     "//flutter/sky/engine/wtf",
+    "//third_party/skia",
+#    "//third_party/skia:gpu",
   ]
 
   if (!is_mac) {
@@ -260,6 +261,11 @@ source_set("platform") {
 
   if (is_ios || is_mac) {
     sources += [ "fonts/apple/FontPlatformDataApple.cpp" ]
+  }
+
+  if (is_win){
+    sources += [ "fonts/apple/FontPlatformDataApple.cpp" ]
+    sources += [ "fonts/apple/FontCacheMac.cpp" ]
   }
 
   if (is_ios) {

@@ -2,25 +2,19 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-declare_args(){
-    component_mode = "shared_library"
-}
 group("flutter") {
   testonly = true
 
+  deps = [ "//flutter/sky" ]
+
   if (is_fuchsia) {
-    # TODO(abarth) Remove this specific list once Fuchsia can build everything.
-    deps = [
+    deps += [
       "//flutter/content_handler",
       "//flutter/examples",
       "//flutter/flow",
       "//flutter/runtime",
       "//flutter/snapshotter",
       "//flutter/snapshotter($host_toolchain)",
-    ]
-  } else {
-    deps = [
-      "//flutter/sky",
     ]
   }
 }

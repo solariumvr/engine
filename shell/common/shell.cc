@@ -22,12 +22,13 @@
 #include "flutter/common/threads.h"
 #include "flutter/glue/task_runner_adaptor.h"
 #include "flutter/runtime/dart_init.h"
+#include "flutter/shell/common/diagnostic/diagnostic_server.h"
 #include "flutter/shell/common/engine.h"
 #include "flutter/shell/common/platform_view_service_protocol.h"
+#include "flutter/shell/common/skia_event_tracer_impl.h"
 #include "flutter/shell/common/switches.h"
-#include "flutter/shell/common/diagnostic/diagnostic_server.h"
-#include "flutter/skia/ext/event_tracer_impl.h"
 #include "lib/ftl/files/unique_fd.h"
+#include "flutter/shell/platform/linux/message_pump_glfw.h"
 
 namespace shell {
 namespace {
@@ -77,6 +78,11 @@ Shell::Shell() {
   DCHECK(!g_shell);
 
   base::Thread::Options options;
+  base::Thread::Options platform_options;
+	platform_options.message_pump_factory = base::Bind(shell::MessagePumpGLFW::Create);
+
+  platform_thread_.reset(new base::Thread("platform_thread"));
+  platform_thread_->StartWithOptions(platform_options);
 
   gpu_thread_.reset(new base::Thread("gpu_thread"));
   gpu_thread_->StartWithOptions(options);
@@ -87,8 +93,10 @@ Shell::Shell() {
   io_thread_.reset(new base::Thread("io_thread"));
   io_thread_->StartWithOptions(options);
 
-  blink::Threads threads(ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
-                             base::MessageLoop::current()->task_runner()),
+	blink::Threads threads(ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
+														base::MessageLoop::current()->task_runner()),
+                         ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
+                             platform_thread_->message_loop()->task_runner()),
                          ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
                              gpu_thread_->message_loop()->task_runner()),
                          ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
@@ -105,20 +113,21 @@ Shell::Shell() {
       PlatformViewServiceProtocol::RegisterHook);
 }
 
-Shell::~Shell() {}
+Shell::~Shell() {
+}
 
 void Shell::InitStandalone(std::string icu_data_path) {
   TRACE_EVENT0("flutter", "Shell::InitStandalone");
 
   //ftl::UniqueFD icu_fd(
-      //icu_data_path.empty() ? -1 : HANDLE_EINTR(::open(icu_data_path.c_str(),
-                                                       //O_RDONLY)));
+  //    icu_data_path.empty() ? -1 : HANDLE_EINTR(::open(icu_data_path.c_str(),
+  //                                                     O_RDONLY)));
   //if (icu_fd.get() == -1) {
   //  // If the embedder did not specify a valid file, fallback to looking through
   //  // internal search paths.
-  //  CHECK(base::i18n::InitializeICU());
+  //  FTL_CHECK(base::i18n::InitializeICU());
   //} else {
-  //  CHECK(base::i18n::InitializeICUWithFileDescriptor(
+  //  FTL_CHECK(base::i18n::InitializeICUWithFileDescriptor(
   //      icu_fd.get(), base::MemoryMappedFile::Region::kWholeFile));
   //  icu_fd.reset();
   //}
@@ -126,13 +135,15 @@ void Shell::InitStandalone(std::string icu_data_path) {
   base::CommandLine& command_line = *base::CommandLine::ForCurrentProcess();
 
   blink::Settings settings;
+
   // Enable Observatory
   settings.enable_observatory =
-      !command_line.HasSwitch(switches::kDisableObservatory);
+      !command_line.HasSwitch(FlagForSwitch(Switch::DisableObservatory));
+
   // Set Observatory Port
-  if (command_line.HasSwitch(switches::kDeviceObservatoryPort)) {
-    auto port_string =
-        command_line.GetSwitchValueASCII(switches::kDeviceObservatoryPort);
+  if (command_line.HasSwitch(FlagForSwitch(Switch::DeviceObservatoryPort))) {
+    auto port_string = command_line.GetSwitchValueASCII(
+        FlagForSwitch(Switch::DeviceObservatoryPort));
     std::stringstream stream(port_string);
     uint32_t port = 0;
     if (stream >> port) {
@@ -143,25 +154,39 @@ void Shell::InitStandalone(std::string icu_data_path) {
           << settings.observatory_port;
     }
   }
-  settings.start_paused = command_line.HasSwitch(switches::kStartPaused);
-  settings.endless_trace_buffer =
-      command_line.HasSwitch(switches::kEndlessTraceBuffer);
-  settings.trace_startup = command_line.HasSwitch(switches::kTraceStartup);
-  settings.aot_snapshot_path =
-      command_line.GetSwitchValueASCII(switches::kAotSnapshotPath);
-  settings.aot_isolate_snapshot_file_name =
-      command_line.GetSwitchValueASCII(switches::kAotIsolateSnapshot);
-  settings.aot_vm_isolate_snapshot_file_name =
-      command_line.GetSwitchValueASCII(switches::kAotVmIsolateSnapshot);
-  settings.aot_instructions_blob_file_name =
-      command_line.GetSwitchValueASCII(switches::kAotInstructionsBlob);
-  settings.aot_rodata_blob_file_name =
-      command_line.GetSwitchValueASCII(switches::kAotRodataBlob);
-  settings.temp_directory_path =
-      command_line.GetSwitchValueASCII(switches::kCacheDirPath);
 
-  if (command_line.HasSwitch(switches::kDartFlags)) {
-		auto dart_flags = command_line.GetSwitchValueNative(switches::kDartFlags);
+  settings.start_paused =
+      command_line.HasSwitch(FlagForSwitch(Switch::StartPaused));
+
+  settings.enable_dart_profiling =
+      command_line.HasSwitch(FlagForSwitch(Switch::EnableDartProfiling));
+
+  settings.endless_trace_buffer =
+      command_line.HasSwitch(FlagForSwitch(Switch::EndlessTraceBuffer));
+
+  settings.trace_startup =
+      command_line.HasSwitch(FlagForSwitch(Switch::TraceStartup));
+
+  settings.aot_snapshot_path =
+      command_line.GetSwitchValueASCII(FlagForSwitch(Switch::AotSnapshotPath));
+
+  settings.aot_isolate_snapshot_file_name = command_line.GetSwitchValueASCII(
+      FlagForSwitch(Switch::AotIsolateSnapshot));
+
+  settings.aot_vm_isolate_snapshot_file_name = command_line.GetSwitchValueASCII(
+      FlagForSwitch(Switch::AotVmIsolateSnapshot));
+
+  settings.aot_instructions_blob_file_name = command_line.GetSwitchValueASCII(
+      FlagForSwitch(Switch::AotInstructionsBlob));
+
+  settings.aot_rodata_blob_file_name =
+      command_line.GetSwitchValueASCII(FlagForSwitch(Switch::AotRodataBlob));
+
+  settings.temp_directory_path =
+      command_line.GetSwitchValueASCII(FlagForSwitch(Switch::CacheDirPath));
+
+  if (command_line.HasSwitch(FlagForSwitch(Switch::DartFlags))) {
+		auto dart_flags = command_line.GetSwitchValueNative(FlagForSwitch(Switch::DartFlags));
 		std::stringstream stream(
 			std::string(dart_flags.begin(), dart_flags.end()));
     std::istream_iterator<std::string> end;

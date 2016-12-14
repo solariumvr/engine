@@ -4,12 +4,103 @@
 
 #include "flutter/shell/platform/linux/platform_view_glfw.h"
 
+#include "third_party/glad/include/glad/glad.h"
 #include <GLFW/glfw3.h>
 
 #include "flutter/common/threads.h"
 #include "flutter/shell/gpu/gpu_rasterizer.h"
+#include "solarium/engine/shader.h"
+#include "solarium/engine/mesh.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 namespace shell {
+
+	namespace {
+		auto m = engine::Mesh();
+		void initMesh() {
+			float _width = 0.5;
+			float _height = 0.5;
+			float _depth = 0.5;
+			m.vertices = {
+				// Front
+				{ { _width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { _width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+
+				//Back
+				{ { _width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { _width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+
+				//Right
+				{ { _width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { _width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { _width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { _width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+
+				//Left
+				{ { -_width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+
+				//Top
+				{ { _width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { _width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+
+				//Bottom
+				{ { -_width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { -_width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { _width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				{ { _width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+			};
+
+			m.indices = {
+				0,
+				1,
+				2,
+				0,
+				2,
+				3,
+				4,
+				5,
+				6,
+				4,
+				6,
+				7,
+				8,
+				9,
+				10,
+				8,
+				10,
+				11,
+				12,
+				13,
+				14,
+				12,
+				14,
+				15,
+				16,
+				17,
+				18,
+				16,
+				18,
+				19,
+				20,
+				21,
+				22,
+				20,
+				22,
+				23
+			};
+			m.SetupMesh();
+		}
+	}
 
 inline PlatformViewGLFW* ToPlatformView(GLFWwindow* window) {
   return static_cast<PlatformViewGLFW*>(glfwGetWindowUserPointer(window));
@@ -22,6 +113,19 @@ PlatformViewGLFW::PlatformViewGLFW()
       buttons_(0) {
   CreateEngine();
 
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+  static const int kStencilBits = 8;  // Skia needs 8 stencil bits
+
+  glfwWindowHint(GLFW_STENCIL_BITS, kStencilBits);
+  glfwWindowHint(GLFW_RED_BITS, kStencilBits);
+  glfwWindowHint(GLFW_GREEN_BITS, kStencilBits);
+  glfwWindowHint(GLFW_BLUE_BITS, kStencilBits);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, 1);
+  glfwWindowHint(GLFW_DEPTH_BITS, 1);
+
   if (!glfwInit()) {
     return;
   }
@@ -31,6 +135,7 @@ PlatformViewGLFW::PlatformViewGLFW()
     return;
   }
 
+	
   glfwSetWindowUserPointer(glfw_window_, this);
 
   glfwSetWindowSizeCallback(
@@ -46,6 +151,15 @@ PlatformViewGLFW::PlatformViewGLFW()
   glfwSetKeyCallback(glfw_window_, [](GLFWwindow* window, int key, int scancode,
                                       int action, int mods) {
     ToPlatformView(window)->OnKeyEvent(key, scancode, action, mods);
+  });
+
+
+  blink::ViewportMetrics metrics;
+	glfwGetWindowSize(glfw_window_, &metrics.physical_width, &metrics.physical_height);
+
+  blink::Threads::UI()->PostTask([ engine = engine().GetWeakPtr(), metrics ] {
+    if (engine.get())
+      engine->SetViewportMetrics(metrics);
   });
 
   valid_ = true;
@@ -86,6 +200,24 @@ bool PlatformViewGLFW::ResourceContextMakeCurrent() {
 }
 
 bool PlatformViewGLFW::GLContextPresent() {
+	glDisable(GL_STENCIL_TEST);
+	glDisable(GL_DEPTH_TEST);
+	glClear(GL_STENCIL_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	auto s = engine::Shader::GetByKey("simple");
+	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	auto projection = glm::perspective(45.0f, (GLfloat)(1024 / 768), 0.1f, 100.0f);
+	auto view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+	auto model = glm::mat4();
+	s.Use();
+	s.SetUniform("projection", projection);
+	s.SetUniform("view", view);
+	s.SetUniform("model", model);
+	glBindVertexArray(m.VAO);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	s.End();
   glfwSwapBuffers(glfw_window_);
   return true;
 }
@@ -93,6 +225,15 @@ bool PlatformViewGLFW::GLContextPresent() {
 void PlatformViewGLFW::RunFromSource(const std::string& assets_directory,
                                      const std::string& main,
                                      const std::string& packages) {}
+
+void PlatformViewGLFW::NotifyCreated(std::unique_ptr<Surface> surface)
+{
+	PlatformView::NotifyCreated(std::move(surface), [&]() {
+		gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+		engine::Shader::Init();
+		initMesh();
+	});
+}
 
 void PlatformViewGLFW::OnWindowSizeChanged(int width, int height) {
   blink::ViewportMetrics metrics;
@@ -186,6 +327,15 @@ void PlatformViewGLFW::OnCursorPosChanged(double x, double y) {
 }
 
 void PlatformViewGLFW::OnKeyEvent(int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		glfwSetWindowShouldClose(glfw_window_, GLFW_TRUE);
+		base::MessageLoop::current()->QuitNow();
+	}
+
+	ftl::RefPtr<blink::PlatformMessageResponse> response;
+	if (action == GLFW_PRESS) {
+		DispatchPlatformMessage(ftl::MakeRefCounted<blink::PlatformMessage>("flutter/keyevent", static_cast<std::vector<uint8_t>>(scancode), response ));
+	}
 }
 
 }  // namespace shell

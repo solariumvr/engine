@@ -9,6 +9,7 @@
 #include "base/logging.h"
 #include "base/run_loop.h"
 #include "base/message_loop/message_loop.h"
+#include "base/files/file_util.h"
 #include "flutter/common/threads.h"
 #include "flutter/shell/common/shell.h"
 #include "flutter/shell/common/switches.h"
@@ -25,7 +26,7 @@ int RunNonInteractive() {
   shell::Shell::InitStandalone();
 
   if (!shell::InitForTesting()) {
-    shell::switches::PrintUsage("sky_shell");
+    shell::PrintUsage("sky_shell");
     return 1;
   }
 
@@ -46,7 +47,9 @@ int RunInteractive() {
 
   shell::Shell::InitStandalone();
 
-  std::string target = command_line.GetSwitchValueASCII(shell::switches::kFLX);
+	blink::Threads::Platform()->PostTask([&]() {
+  std::string target = command_line.GetSwitchValueASCII(
+      shell::FlagForSwitch(shell::Switch::FLX));
 
   if (target.empty()) {
     // Alternatively, use the first positional argument.
@@ -77,9 +80,14 @@ int RunInteractive() {
         }
       });
 
-  //message_loop.Run();
-	base::RunLoop().Run();
+  base::RunLoop().Run();
   platform_view->NotifyDestroyed();
+
+	});
+	//blink::Threads::Platform()->PostDelayedTask([]() {
+	//	base::MessageLoop::current()->QuitNow();
+	//}, ftl::TimeDelta::FromSeconds(4));
+  base::RunLoop().Run();
 
   return 0;
 }
@@ -92,12 +100,19 @@ int main(int argc, const char* argv[]) {
 
   base::CommandLine& command_line = *base::CommandLine::ForCurrentProcess();
 
-  if (command_line.HasSwitch(shell::switches::kHelp)) {
-    shell::switches::PrintUsage("sky_shell");
+  logging::SetLogItems(true,  // Process ID
+                       true,  // Thread ID
+                       true,  // Timestamp
+                       true   // Tick ount
+                       );
+
+  if (command_line.HasSwitch(shell::FlagForSwitch(shell::Switch::Help))) {
+    shell::PrintUsage("sky_shell");
     return 0;
   }
 
-  if (command_line.HasSwitch(shell::switches::kNonInteractive)) {
+  if (command_line.HasSwitch(
+          shell::FlagForSwitch(shell::Switch::NonInteractive))) {
     return RunNonInteractive();
   }
 

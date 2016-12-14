@@ -15,16 +15,21 @@ Threads* g_threads = nullptr;
 
 Threads::Threads() {}
 
-Threads::Threads(ftl::RefPtr<ftl::TaskRunner> platform,
+Threads::Threads(ftl::RefPtr<ftl::TaskRunner> service,
+                 ftl::RefPtr<ftl::TaskRunner> platform,
                  ftl::RefPtr<ftl::TaskRunner> gpu,
                  ftl::RefPtr<ftl::TaskRunner> ui,
                  ftl::RefPtr<ftl::TaskRunner> io)
-    : platform_(std::move(platform)),
+    : service_(std::move(service)),
+			platform_(std::move(platform)),
       gpu_(std::move(gpu)),
       ui_(std::move(ui)),
       io_(std::move(io)) {}
-
 Threads::~Threads() {}
+
+const ftl::RefPtr<ftl::TaskRunner>& Threads::Service() {
+  return Get().service_;
+}
 
 const ftl::RefPtr<ftl::TaskRunner>& Threads::Platform() {
   return Get().platform_;

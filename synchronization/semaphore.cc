@@ -58,8 +58,8 @@ namespace flutter {
 	public:
 		explicit PlatformSemaphore(uint32_t count)
 		{
-			sem_ = CreateSemaphore(NULL, count, count, NULL);
-			valid_ = sem_;
+			sem_ = CreateSemaphore(NULL, count, std::numeric_limits<long>::max(), NULL);
+			valid_ = sem_ != NULL;
 		}
 
 		~PlatformSemaphore() {
@@ -78,8 +78,12 @@ namespace flutter {
 			if (!valid_) {
 				return false;
 			}
-
-			return WaitForSingleObject(sem_, 0L);
+			auto result = WaitForSingleObject(sem_, INFINITY);
+			auto wait_failed = WAIT_FAILED;
+			auto wait_timeout = WAIT_TIMEOUT;
+			auto wait_object_0 = WAIT_OBJECT_0;
+			auto wait_abandoned = WAIT_ABANDONED;
+			return result == WAIT_OBJECT_0;
 			//return HANDLE_EINTR(::sem_trywait(&sem_)) == 0;
 		}
 
@@ -88,7 +92,7 @@ namespace flutter {
 				return;
 			}
 
-			ReleaseSemaphore(sem_, 1, NULL);
+			ReleaseSemaphore(sem_, 1, 0);
 			//::sem_post(&sem_);
 			return;
 		}

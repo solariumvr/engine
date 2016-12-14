@@ -1,6 +1,9 @@
 # Copyright 2016 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
+declare_args(){
+    is_fuchsia_host = false
+}
 
 source_set("glue") {
   sources = [
@@ -12,7 +15,7 @@ source_set("glue") {
     "//lib/ftl",
   ]
 
-  if (is_fuchsia) {
+  if (is_fuchsia || is_fuchsia_host) {
     sources += [
       "stack_trace_fuchsia.cc",
     ]

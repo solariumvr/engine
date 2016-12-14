@@ -36,6 +36,7 @@ class PlatformViewGLFW : public PlatformView, public GPUSurfaceGLDelegate {
                      const std::string& main,
                      const std::string& packages) override;
 
+  void NotifyCreated(std::unique_ptr<Surface> surface);
  private:
   bool valid_;
   GLFWwindow* glfw_window_;

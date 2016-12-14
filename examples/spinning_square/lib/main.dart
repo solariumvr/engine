@@ -32,7 +32,7 @@ void beginFrame(Duration timeStamp) {
   canvas.rotate(math.PI * (t % 1.0));
 
   canvas.drawRect(new ui.Rect.fromLTRB(-100.0, -100.0, 100.0, 100.0),
-                  new ui.Paint()..color = const ui.Color.fromARGB(255, 0, 255, 0));
+                  new ui.Paint()..color = const ui.Color.fromARGB(255, 255, 0, 0));
   final ui.Picture picture = recorder.endRecording();
 
   // COMPOSITE

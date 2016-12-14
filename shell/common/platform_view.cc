@@ -12,6 +12,7 @@
 #include "flutter/shell/common/vsync_waiter_fallback.h"
 #include "lib/ftl/functional/make_copyable.h"
 #include "third_party/skia/include/gpu/gl/GrGLInterface.h"
+#include "flutter/flow/open_gl.h"
 
 namespace shell {
 
@@ -72,7 +73,6 @@ void PlatformView::NotifyCreated(std::unique_ptr<Surface> surface) {
 void PlatformView::NotifyCreated(std::unique_ptr<Surface> surface,
                                  ftl::Closure caller_continuation) {
   ftl::AutoResetWaitableEvent latch;
-
   auto ui_continuation = ftl::MakeCopyable([
     this,                          //
     surface = std::move(surface),  //
@@ -162,7 +162,7 @@ void PlatformView::SetupResourceContextOnIOThreadPerform(
 
   blink::ResourceContext::Set(GrContext::Create(
       GrBackend::kOpenGL_GrBackend,
-      reinterpret_cast<GrBackendContext>(GrGLCreateNativeInterface())));
+      0));
   latch->Signal();
 }
 

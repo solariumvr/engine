@@ -30,6 +30,7 @@
 #include "lib/tonic/scopes/dart_isolate_scope.h"
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
+#include "base/message_loop/message_loop.h"
 
 #ifdef OS_ANDROID
 #include "flutter/lib/jni/dart_jni.h"
@@ -43,10 +44,13 @@ namespace {
 
 // TODO(abarth): Consider adding this to //lib/ftl.
 std::string ResolvePath(std::string path) {
-	base::FilePath* file_path;
-	base::GetCurrentDirectory(file_path);
-	file_path->Append(path);
-	return file_path->MaybeAsASCII();
+		if (!path.empty() && path[0] == '/')
+			return path;
+		base::FilePath current_directory;
+
+		base::GetCurrentDirectory(&current_directory);
+		current_directory.AppendASCII(path);
+		return current_directory.MaybeAsASCII();
 }
 
 }  // namespace
@@ -61,6 +65,7 @@ DartController::~DartController() {
     Dart_SetMessageNotifyCallback(nullptr);
     Dart_ShutdownIsolate();  // deletes ui_dart_state_
     ui_dart_state_ = nullptr;
+    auto error = Dart_Cleanup();
   }
 }
 
@@ -127,7 +132,7 @@ void DartController::RunFromSource(const std::string& main,
                                    const std::string& packages) {
   tonic::DartState::Scope scope(dart_state());
   tonic::FileLoader& loader = dart_state()->file_loader();
-  if (!packages.empty() && !loader.LoadPackagesMap(ResolvePath(packages)))
+  if (!packages.empty() && !loader.LoadPackagesMap(packages))
     LOG(WARNING) << "Failed to load package map: " << packages;
   LogIfError(loader.LoadScript(main));
   if (SendStartMessage(Dart_RootLibrary()))

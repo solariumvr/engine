@@ -18,7 +18,7 @@ declare_args() {
   flutter_aot = false
 
   # The runtime mode ("debug", "profile", or "release")
-  flutter_runtime_mode = "release"
+  flutter_runtime_mode = "debug"
 }
 
 # feature_defines_list ---------------------------------------------------------

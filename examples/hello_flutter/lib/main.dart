@@ -36,6 +36,7 @@ void beginFrame(Duration timeStamp) {
     ..pop();
 
   ui.window.render(sceneBuilder.build());
+  ui.window.scheduleFrame();
 }
 
 // This function is the primary entry point to your application. The engine

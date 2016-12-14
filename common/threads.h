@@ -12,12 +12,14 @@ namespace blink {
 class Threads {
  public:
   Threads();
-  Threads(ftl::RefPtr<ftl::TaskRunner> platform,
+  Threads(ftl::RefPtr<ftl::TaskRunner> service,
+					ftl::RefPtr<ftl::TaskRunner> platform,
           ftl::RefPtr<ftl::TaskRunner> gpu,
           ftl::RefPtr<ftl::TaskRunner> ui,
           ftl::RefPtr<ftl::TaskRunner> io);
   ~Threads();
 
+  static const ftl::RefPtr<ftl::TaskRunner>& Service();
   static const ftl::RefPtr<ftl::TaskRunner>& Platform();
   static const ftl::RefPtr<ftl::TaskRunner>& Gpu();
   static const ftl::RefPtr<ftl::TaskRunner>& UI();
@@ -28,6 +30,7 @@ class Threads {
  private:
   static const Threads& Get();
 
+  ftl::RefPtr<ftl::TaskRunner> service_;
   ftl::RefPtr<ftl::TaskRunner> platform_;
   ftl::RefPtr<ftl::TaskRunner> gpu_;
   ftl::RefPtr<ftl::TaskRunner> ui_;

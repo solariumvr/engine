@@ -9,6 +9,7 @@
 #include "base/trace_event/trace_event.h"
 #include "flutter/common/threads.h"
 #include "lib/ftl/time/stopwatch.h"
+#include "lib/ftl/functional/make_copyable.h"
 
 namespace shell {
 
@@ -21,7 +22,9 @@ Animator::Animator(base::WeakPtr<Rasterizer> rasterizer,
       layer_tree_pipeline_(ftl::MakeRefCounted<LayerTreePipeline>(3)),
       pending_frame_semaphore_(1),
       paused_(false),
-      weak_factory_(this) {}
+      weak_factory_(this) {
+  DCHECK(rasterizer_);
+}
 
 Animator::~Animator() = default;
 
@@ -77,13 +80,13 @@ void Animator::Render(std::unique_ptr<flow::LayerTree> layer_tree) {
 
   // Commit the pending continuation.
   producer_continuation_.Complete(std::move(layer_tree));
-
-  blink::Threads::Gpu()->PostTask(
-      [ rasterizer = rasterizer_, pipeline = layer_tree_pipeline_ ]() {
-        if (!rasterizer.get())
-          return;
-        rasterizer->Draw(pipeline);
-      });
+	blink::Threads::Gpu()->PostTask(ftl::MakeCopyable(
+		[rasterizer = rasterizer_.get(), pipeline = layer_tree_pipeline_]() {
+		if (!rasterizer)
+			return;
+		rasterizer->Draw(pipeline);
+	})
+	);
 }
 
 void Animator::RequestFrame() {
@@ -92,8 +95,8 @@ void Animator::RequestFrame() {
   }
 
   if (!pending_frame_semaphore_.TryWait()) {
-    // Multiple calls to Animator::RequestFrame will still result in a single
-    // request to the VsyncWaiter.
+     //Multiple calls to Animator::RequestFrame will still result in a single
+     //request to the VsyncWaiter.
     return;
   }
 
