@@ -149,6 +149,10 @@ void Logger_PrintString(Dart_NativeArguments args) {
     fwrite(chars, 1, length, stdout);
     fputs("\n", stdout);
     fflush(stdout);
+
+      //TODO Make sure the following two lines are only done during Development
+    std::string s(chars, chars + length);
+    DLOG(INFO) << "Dart Log:" << s;
 #if defined(OS_ANDROID)
     // In addition to writing to the stdout, write to the logcat so that the
     // message is discoverable when running on an unrooted device.

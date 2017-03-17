@@ -47,6 +47,11 @@ void TaskRunnerAdaptor::PostDelayedTask(ftl::Closure task,
       base::TimeDelta::FromMicroseconds(delay.ToMicroseconds()));
 }
 
+void TaskRunnerAdaptor::PostTaskAndReply(ftl::Closure task, ftl::Closure reply)
+{
+	runner_->PostTaskAndReply(FROM_HERE, base::Bind(RunClosure, task), base::Bind(RunClosure, reply));
+}
+
 bool TaskRunnerAdaptor::RunsTasksOnCurrentThread() {
   return runner_->RunsTasksOnCurrentThread();
 }

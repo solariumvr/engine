@@ -41,7 +41,7 @@
 #include "lib/tonic/dart_sticky_error.h"
 #include "lib/tonic/dart_wrappable.h"
 #include "lib/tonic/debugger/dart_debugger.h"
-#include "lib/tonic/file_loader/file_loader.h"
+#include "lib/tonic/file_loader/default_file_loader.h"
 #include "lib/tonic/logging/dart_error.h"
 #include "lib/tonic/logging/dart_invoke.h"
 #include "lib/tonic/scopes/dart_api_scope.h"
@@ -77,6 +77,18 @@ namespace blink {
 const char kSnapshotAssetKey[] = "snapshot_blob.bin";
 
 namespace {
+
+static const char* kDartProfilingArgs[] = {
+    // Dart assumes ARM devices are insufficiently powerful and sets the
+    // default profile period to 100Hz. This number is suitable for older
+    // Raspberry Pi devices but quite low for current smartphones.
+    "--profile_period=1000",
+#if (WTF_OS_IOS || WTF_OS_MACOSX)
+    // On platforms where LLDB is the primary debugger, SIGPROF signals
+    // overwhelm LLDB.
+    "--no-profiler",
+#endif
+};
 
 static const char* kDartMirrorsArgs[] = {
     "--enable_mirrors=false",
@@ -210,7 +222,6 @@ Dart_Isolate ServiceIsolateCreateCallback(const char* script_uri,
     if (settings.enable_observatory) {
       std::string ip = "127.0.0.1";
       const intptr_t port = settings.observatory_port;
-      DLOG(INFO) << "Observatory Enabled: " << ip << port;
       const bool disable_websocket_origin_check = false;
       const bool service_isolate_booted = DartServiceIsolate::Startup(
           ip, port, tonic::DartState::HandleLibraryTag,
@@ -307,9 +318,9 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
       // We are running from source.
       // Forward the .packages configuration from the parent isolate to the
       // child isolate.
-      tonic::FileLoader& parent_loader = parent_dart_state->file_loader();
+			tonic::DefaultFileLoader& parent_loader = static_cast<tonic::DefaultFileLoader&>(parent_dart_state->file_loader());
       const std::string& packages = parent_loader.packages();
-      tonic::FileLoader& loader = dart_state->file_loader();
+			tonic::DefaultFileLoader& loader = static_cast<tonic::DefaultFileLoader&>(dart_state->file_loader());
       if (!packages.empty() && !loader.LoadPackagesMap(packages)) {
         LOG(WARNING) << "Failed to load package map: " << packages;
       }
@@ -538,30 +549,6 @@ static void EmbedderTimelineStopRecording() {
     g_tracing_callbacks->stop_tracing_callback();
 }
 
-static std::vector<const char*> ProfilingFlags(bool enable_profiling) {
-// Disable Dart's built in profiler when building a debug build. This
-// works around a race condition that would sometimes stop a crash's
-// stack trace from being printed on Android.
-#ifndef NDEBUG
-  enable_profiling = false;
-#endif
-
-  // We want to disable profiling by default because it overwhelms LLDB. But
-  // the VM enables the same by default. In either case, we have some profiling
-  // flags.
-  if (enable_profiling) {
-    return {
-        // Dart assumes ARM devices are insufficiently powerful and sets the
-        // default profile period to 100Hz. This number is suitable for older
-        // Raspberry Pi devices but quite low for current smartphones.
-        "--profile_period=1000",
-        // This is the default. But just be explicit.
-        "--profiler"};
-  } else {
-    return {"--no-profiler"};
-  }
-}
-
 void SetServiceIsolateHook(ServiceIsolateHook hook) {
   CHECK(!g_service_isolate_initialized);
   g_service_isolate_hook = hook;
@@ -603,11 +590,7 @@ void InitDartVM() {
   // it does not recognize, it exits immediately.
   args.push_back("--ignore-unrecognized-flags");
 
-  for (const auto& profiler_flag :
-       ProfilingFlags(settings.enable_dart_profiling)) {
-    args.push_back(profiler_flag);
-  }
-
+  PushBackAll(&args, kDartProfilingArgs, arraysize(kDartProfilingArgs));
   PushBackAll(&args, kDartMirrorsArgs, arraysize(kDartMirrorsArgs));
   PushBackAll(&args, kDartBackgroundCompilationArgs,
               arraysize(kDartBackgroundCompilationArgs));

@@ -5,6 +5,7 @@
 import("//dart/sdk/lib/rules.gni")
 import("//flutter/build/dart/rules.gni")
 import("//flutter/lib/jni/dart_jni.gni")
+import("//solarium/navigator/dart_navigator.gni")
 import("//flutter/lib/ui/dart_ui.gni")
 import("//flutter/sky/engine/core/core.gni")
 
@@ -81,6 +82,14 @@ copy("copy_dart_jni") {
   ]
 }
 
+copy("copy_dart_navigator") {
+  sources = dart_navigator_files
+
+  outputs = [
+    "$root_gen_dir/dart-pkg/sky_engine/dart_navigator/{{source_file_part}}",
+  ]
+}
+
 group("copy_dart_sdk") {
   deps = [
     ":async",
@@ -106,6 +115,7 @@ dart_pkg("sky_engine") {
 
   deps = [
     ":copy_dart_jni",
+    ":copy_dart_navigator",
     ":copy_dart_sdk",
     ":copy_dart_ui",
   ]

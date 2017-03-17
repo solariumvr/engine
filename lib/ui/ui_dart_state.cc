@@ -7,6 +7,7 @@
 #include "flutter/lib/ui/window/window.h"
 #include "flutter/sky/engine/platform/fonts/FontSelector.h"
 #include "lib/tonic/converter/dart_converter.h"
+#include "lib/tonic/file_loader/default_file_loader.h"
 
 #if defined(OS_ANDROID)
 #include "flutter/lib/jni/dart_jni.h"
@@ -20,7 +21,8 @@ IsolateClient::~IsolateClient() {}
 
 UIDartState::UIDartState(IsolateClient* isolate_client,
                          std::unique_ptr<Window> window)
-    : isolate_client_(isolate_client),
+    : tonic::DartState(std::make_unique<tonic::DefaultFileLoader>()),
+      isolate_client_(isolate_client),
       main_port_(ILLEGAL_PORT),
       window_(std::move(window)) {
 #ifdef OS_ANDROID
@@ -42,6 +44,7 @@ UIDartState* UIDartState::CreateForChildIsolate() {
 }
 
 void UIDartState::DidSetIsolate() {
+  DLOG(INFO) << "TEST";
   main_port_ = Dart_GetMainPortId();
   tonic::DartApiScope api_scope;
   Dart_Handle debug_name = Dart_DebugName();

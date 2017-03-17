@@ -10,6 +10,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:jni';
+import 'dart:navigator';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui';

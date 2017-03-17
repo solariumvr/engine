@@ -21,7 +21,7 @@ executable("linux_run") {
   ]
 
   configs += [
-    "//solarium:glm",
+    "//third_party/glm",
   ]
 
   deps = [

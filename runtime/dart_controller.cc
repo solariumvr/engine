@@ -23,7 +23,7 @@
 #include "lib/tonic/dart_state.h"
 #include "lib/tonic/dart_wrappable.h"
 #include "lib/tonic/debugger/dart_debugger.h"
-#include "lib/tonic/file_loader/file_loader.h"
+#include "lib/tonic/file_loader/default_file_loader.h"
 #include "lib/tonic/logging/dart_error.h"
 #include "lib/tonic/logging/dart_invoke.h"
 #include "lib/tonic/scopes/dart_api_scope.h"
@@ -131,7 +131,7 @@ void DartController::RunFromSnapshot(const uint8_t* buffer, size_t size) {
 void DartController::RunFromSource(const std::string& main,
                                    const std::string& packages) {
   tonic::DartState::Scope scope(dart_state());
-  tonic::FileLoader& loader = dart_state()->file_loader();
+	tonic::DefaultFileLoader& loader = static_cast<tonic::DefaultFileLoader&>(dart_state()->file_loader());
   if (!packages.empty() && !loader.LoadPackagesMap(packages))
     LOG(WARNING) << "Failed to load package map: " << packages;
   LogIfError(loader.LoadScript(main));

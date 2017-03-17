@@ -21,7 +21,7 @@
 #include "lib/ftl/files/unique_fd.h"
 #include "base/logging.h"
 #include "lib/tonic/converter/dart_converter.h"
-#include "lib/tonic/file_loader/file_loader.h"
+#include "lib/tonic/file_loader/default_file_loader.h"
 
 extern "C" {
 extern const uint8_t kVmIsolateSnapshot[];
@@ -108,11 +108,11 @@ Dart_Isolate CreateDartIsolate() {
   return isolate;
 }
 
-tonic::FileLoader* g_loader = nullptr;
+tonic::DefaultFileLoader* g_loader = nullptr;
 
-tonic::FileLoader& GetLoader() {
+tonic::DefaultFileLoader& GetLoader() {
   if (!g_loader)
-    g_loader = new tonic::FileLoader();
+    g_loader = new tonic::DefaultFileLoader();
   return *g_loader;
 }
 
@@ -235,7 +235,7 @@ int CreateSnapshot(const ftl::CommandLine& command_line) {
 
   InitDartVM();
 
-  tonic::FileLoader& loader = GetLoader();
+  tonic::DefaultFileLoader& loader = GetLoader();
   if (!loader.LoadPackagesMap(packages))
     return 1;
 
