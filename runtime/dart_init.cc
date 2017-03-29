@@ -283,9 +283,10 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
   UIDartState* dart_state = parent_dart_state->CreateForChildIsolate();
 
   Dart_Isolate isolate = Dart_CreateIsolate(
-      script_uri, main,
-      reinterpret_cast<uint8_t*>(DART_SYMBOL(kIsolateSnapshot)), nullptr,
-      dart_state, error);
+	  script_uri, main,
+	  reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartIsolateSnapshotData)),
+	  reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartIsolateSnapshotInstructions)),
+	  nullptr, dart_state, error);
   CHECK(isolate) << error;
   dart_state->SetIsolate(isolate);
   CHECK(!LogIfError(
@@ -654,16 +655,16 @@ void InitDartVM() {
 
   {
     TRACE_EVENT0("flutter", "Dart_Initialize");
-    Dart_InitializeParams params = {};
-    params.version = DART_INITIALIZE_PARAMS_CURRENT_VERSION;
-    params.vm_isolate_snapshot =
-        reinterpret_cast<uint8_t*>(DART_SYMBOL(kVmIsolateSnapshot));
-    params.instructions_snapshot = PrecompiledInstructionsSymbolIfPresent();
-    params.data_snapshot = PrecompiledDataSnapshotSymbolIfPresent();
-    params.create = IsolateCreateCallback;
-    params.shutdown = IsolateShutdownCallback;
-    params.thread_exit = ThreadExitCallback;
-    params.get_service_assets = GetVMServiceAssetsArchiveCallback;
+	Dart_InitializeParams params = {};
+	params.version = DART_INITIALIZE_PARAMS_CURRENT_VERSION;
+	params.vm_snapshot_data =
+		reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartVmSnapshotData));
+	params.vm_snapshot_instructions =
+		reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartVmSnapshotInstructions));
+	params.create = IsolateCreateCallback;
+	params.shutdown = IsolateShutdownCallback;
+	params.thread_exit = ThreadExitCallback;
+	params.get_service_assets = GetVMServiceAssetsArchiveCallback;
     char* init_error = Dart_Initialize(&params);
     if (init_error != nullptr)
       LOG(FATAL) << "Error while initializing the Dart VM: " << init_error;

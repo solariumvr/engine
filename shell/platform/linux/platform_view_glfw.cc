@@ -17,50 +17,17 @@
 namespace shell {
 
 	namespace {
-		auto m = engine::Mesh();
+		auto m = engine::Mesh::New();
 		void initMesh() {
 			float _width = 0.5;
 			float _height = 0.5;
 			float _depth = 0.5;
-			m.vertices = {
+			m->vertices = {
 				// Front
-				{ { _width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { _width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-
-				//Back
-				{ { _width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { _width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-
-				//Right
-				{ { _width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { _width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { _width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { _width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-
-				//Left
-				{ { -_width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-
-				//Top
-				{ { _width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { _width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, _height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, _height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-
-				//Bottom
-				{ { -_width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { -_width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { _width, -_height, -_depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
-				{ { _width, -_height, _depth },{ 0.f,0.f,0.f },{ 0.f,0.f } },
+				 _width, _height, _depth , 0.f,0.f,0.f , 0.f,0.f ,
 			};
 
-			m.indices = {
+			m->indices = {
 				0,
 				1,
 				2,
@@ -98,7 +65,7 @@ namespace shell {
 				22,
 				23
 			};
-			m.SetupMesh();
+			m->SetupMesh();
 		}
 	}
 
@@ -214,7 +181,7 @@ bool PlatformViewGLFW::GLContextPresent() {
 	s.SetUniform("projection", projection);
 	s.SetUniform("view", view);
 	s.SetUniform("model", model);
-	glBindVertexArray(m.VAO);
+	glBindVertexArray(m->VAO);
 	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 	s.End();

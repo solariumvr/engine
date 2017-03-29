@@ -143,9 +143,11 @@ void DartController::CreateIsolateFor(const std::string& script_uri,
                                       std::unique_ptr<UIDartState> state) {
   char* error = nullptr;
   Dart_Isolate isolate = Dart_CreateIsolate(
-      script_uri.c_str(), "main",
-      reinterpret_cast<uint8_t*>(DART_SYMBOL(kIsolateSnapshot)), nullptr,
-      static_cast<tonic::DartState*>(state.get()), &error);
+	  script_uri.c_str(), "main",
+	  reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartIsolateSnapshotData)),
+	  reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartIsolateSnapshotInstructions)),
+	  nullptr,
+	  static_cast<tonic::DartState*>(state.get()), &error);
   CHECK(isolate) << error;
   ui_dart_state_ = state.release();
   dart_state()->message_handler().Initialize(blink::Threads::UI());
