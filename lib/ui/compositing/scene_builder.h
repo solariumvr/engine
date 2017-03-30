@@ -38,14 +38,16 @@ class SceneBuilder : public ftl::RefCountedThreadSafe<SceneBuilder>,
   void pushClipRRect(const RRect& rrect);
   void pushClipPath(const CanvasPath* path);
   void pushOpacity(int alpha);
-  void pushColorFilter(int color, int transferMode);
+  void pushColorFilter(int color, int blendMode);
   void pushBackdropFilter(ImageFilter* filter);
   void pushShaderMask(Shader* shader,
                       double maskRectLeft,
                       double maskRectRight,
                       double maskRectTop,
                       double maskRectBottom,
-                      int transferMode);
+                      int blendMode);
+  void pushPhysicalModel(const RRect& rrect, int elevation, int color);
+
   void pop();
 
   void addPerformanceOverlay(uint64_t enabledOptions,
@@ -59,7 +61,8 @@ class SceneBuilder : public ftl::RefCountedThreadSafe<SceneBuilder>,
                      double devicePixelRatio,
                      int physicalWidth,
                      int physicalHeight,
-                     uint32_t sceneToken);
+                     uint32_t sceneToken,
+                     bool hitTestable);
 
   void setRasterizerTracingThreshold(uint32_t frameInterval);
 

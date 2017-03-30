@@ -5,11 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleExecutable</key>
-	<string>SkyShell</string>
+	<string>FlutterTester</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
-	<string>org.domokit.sky</string>
+	<string>io.flutter</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -27,8 +27,8 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright 2015 The Flutter Authors. All rights reserved.</string>
 	<key>NSMainNibFile</key>
-	<string>sky_mac</string>
+	<string>flutter_mac</string>
 	<key>NSPrincipalClass</key>
-	<string>SkyApplication</string>
+	<string>FlutterApplication</string>
 </dict>
 </plist>

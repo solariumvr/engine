@@ -7,8 +7,8 @@
 
 #include "flutter/shell/common/surface.h"
 #include "flutter/synchronization/debug_thread_checker.h"
-#include "base/macros.h"
-#include "base/memory/weak_ptr.h"
+#include "lib/ftl/macros.h"
+#include "lib/ftl/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -41,7 +41,7 @@ class GPUSurfaceGL : public Surface {
   GPUSurfaceGLDelegate* delegate_;
   sk_sp<GrContext> context_;
   sk_sp<SkSurface> cached_surface_;
-  base::WeakPtrFactory<GPUSurfaceGL> weak_factory_;
+  ftl::WeakPtrFactory<GPUSurfaceGL> weak_factory_;
 
   sk_sp<SkSurface> CreateSurface(const SkISize& size);
 
@@ -51,27 +51,7 @@ class GPUSurfaceGL : public Surface {
 
   bool SelectPixelConfig(GrPixelConfig* config);
 
-  DISALLOW_COPY_AND_ASSIGN(GPUSurfaceGL);
-};
-
-class GPUSurfaceFrameGL : public SurfaceFrame {
- public:
-  using SubmitCallback = std::function<bool(SkCanvas* canvas)>;
-
-  GPUSurfaceFrameGL(sk_sp<SkSurface> surface, SubmitCallback submit_callback);
-
-  ~GPUSurfaceFrameGL();
-
-  SkCanvas* SkiaCanvas() override;
-
- private:
-  FLUTTER_THREAD_CHECKER_DECLARE(checker_);
-  sk_sp<SkSurface> surface_;
-  SubmitCallback submit_callback_;
-
-  bool PerformSubmit() override;
-
-  DISALLOW_COPY_AND_ASSIGN(GPUSurfaceFrameGL);
+  FTL_DISALLOW_COPY_AND_ASSIGN(GPUSurfaceGL);
 };
 
 }  // namespace shell

@@ -6,28 +6,36 @@
 #define FLUTTER_SHELL_PLATFORM_ANDROID_ANDROID_NATIVE_WINDOW_H_
 
 #include <android/native_window.h>
-#include "base/macros.h"
+#include "lib/ftl/macros.h"
+#include "lib/ftl/memory/ref_counted.h"
+#include "lib/ftl/memory/ref_ptr.h"
+#include "third_party/skia/include/core/SkSize.h"
 
 namespace shell {
 
-class AndroidNativeWindow {
+class AndroidNativeWindow
+    : public ftl::RefCountedThreadSafe<AndroidNativeWindow> {
  public:
   using Handle = ANativeWindow*;
-
-  AndroidNativeWindow(Handle window);
-
-  AndroidNativeWindow(AndroidNativeWindow&& other);
-
-  ~AndroidNativeWindow();
 
   bool IsValid() const;
 
   Handle handle() const;
 
+  SkISize GetSize() const;
+
  private:
   Handle window_;
 
-  DISALLOW_COPY_AND_ASSIGN(AndroidNativeWindow);
+  /// Creates a native window with the given handle. Handle ownership is assumed
+  /// by this instance of the native window.
+  explicit AndroidNativeWindow(Handle window);
+
+  ~AndroidNativeWindow();
+
+  FRIEND_MAKE_REF_COUNTED(AndroidNativeWindow);
+  FRIEND_REF_COUNTED_THREAD_SAFE(AndroidNativeWindow);
+  FTL_DISALLOW_COPY_AND_ASSIGN(AndroidNativeWindow);
 };
 
 }  // namespace shell

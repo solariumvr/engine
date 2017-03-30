@@ -90,13 +90,13 @@ class SceneBuilder extends NativeFieldWrapperClass2 {
   /// Pushes a color filter operation onto the operation stack.
   ///
   /// The given color is applied to the objects' rasterization using the given
-  /// transfer mode.
+  /// blend mode.
   ///
   /// See [pop] for details about the operation stack.
-  void pushColorFilter(Color color, TransferMode transferMode) {
-    _pushColorFilter(color.value, transferMode.index);
+  void pushColorFilter(Color color, BlendMode blendMode) {
+    _pushColorFilter(color.value, blendMode.index);
   }
-  void _pushColorFilter(int color, int transferMode) native "SceneBuilder_pushColorFilter";
+  void _pushColorFilter(int color, int blendMode) native "SceneBuilder_pushColorFilter";
 
   /// Pushes a backdrop filter operation onto the operation stack.
   ///
@@ -109,23 +109,35 @@ class SceneBuilder extends NativeFieldWrapperClass2 {
   /// Pushes a shader mask operation onto the operation stack.
   ///
   /// The given shader is applied to the object's rasterization in the given
-  /// rectangle using the given transfer mode.
+  /// rectangle using the given blend mode.
   ///
   /// See [pop] for details about the operation stack.
-  void pushShaderMask(Shader shader, Rect maskRect, TransferMode transferMode) {
+  void pushShaderMask(Shader shader, Rect maskRect, BlendMode blendMode) {
     _pushShaderMask(shader,
                     maskRect.left,
                     maskRect.right,
                     maskRect.top,
                     maskRect.bottom,
-                    transferMode.index);
+                    blendMode.index);
   }
   void _pushShaderMask(Shader shader,
                        double maskRectLeft,
                        double maskRectRight,
                        double maskRectTop,
                        double maskRectBottom,
-                       int transferMode) native "SceneBuilder_pushShaderMask";
+                       int blendMode) native "SceneBuilder_pushShaderMask";
+
+  /// Pushes a physical model operation onto the operation stack.
+  ///
+  /// Rasterization will be clipped to the given shape.
+  ///
+  /// See [pop] for details about the operation stack.
+  void pushPhysicalModel({ RRect rrect, int elevation, Color color }) {
+    _pushPhysicalModel(rrect._value, elevation, color.value);
+  }
+  void _pushPhysicalModel(Float32List rrect,
+                          int elevation,
+                          int color) native "SceneBuilder_pushPhysicalModel";
 
   /// Ends the effect of the most recently pushed operation.
   ///
@@ -191,24 +203,29 @@ class SceneBuilder extends NativeFieldWrapperClass2 {
   /// Applications typically obtain scene tokens when embedding other views via
   /// the Fuchsia view manager, but this function is agnostic as to the source
   /// of scene token.
-  void addChildScene(Offset offset,
-                     double devicePixelRatio,
-                     int physicalWidth,
-                     int physicalHeight,
-                     int sceneToken) {
+  void addChildScene({
+    Offset offset: Offset.zero,
+    double devicePixelRatio: 1.0,
+    int physicalWidth: 0,
+    int physicalHeight: 0,
+    int sceneToken,
+    bool hitTestable: true
+  }) {
     _addChildScene(offset.dx,
                    offset.dy,
                    devicePixelRatio,
                    physicalWidth,
                    physicalHeight,
-                   sceneToken);
+                   sceneToken,
+                   hitTestable);
   }
   void _addChildScene(double dx,
                       double dy,
                       double devicePixelRatio,
                       int physicalWidth,
                       int physicalHeight,
-                      int sceneToken) native "SceneBuilder_addChildScene";
+                      int sceneToken,
+                      bool hitTestable) native "SceneBuilder_addChildScene";
 
   /// Sets a threshold after which additional debugging information should be recorded.
   ///

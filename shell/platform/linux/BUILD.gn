@@ -78,3 +78,22 @@ executable("testing"){
         "opengl32.lib"
     ]
 }
+
+executable("linux_new") {
+  output_name = "flutter_tester"
+
+  sources = [
+    "main_linux.cc",
+  ]
+
+  deps = [
+    "//dart/runtime/bin:embedded_dart_io",
+    "//flutter/common",
+    "//flutter/fml",
+    "//flutter/shell/common",
+    "//flutter/shell/testing",
+    "//lib/ftl",
+    "//lib/tonic",
+    "//third_party/skia",
+  ]
+}

@@ -5,18 +5,21 @@
 #include "flutter/shell/common/engine.h"
 
 #include <sys/stat.h>
-//#include <unistd.h>
+#include <unistd.h>
+#include <memory>
 #include <utility>
 
 #include "flutter/assets/directory_asset_bundle.h"
 #include "flutter/assets/unzipper_provider.h"
 #include "flutter/assets/zip_asset_store.h"
+#include "flutter/common/settings.h"
 #include "flutter/common/threads.h"
 #include "flutter/glue/trace_event.h"
 #include "flutter/runtime/asset_font_selector.h"
 #include "flutter/runtime/dart_controller.h"
 #include "flutter/runtime/dart_init.h"
 #include "flutter/runtime/runtime_init.h"
+#include "flutter/runtime/test_font_selector.h"
 #include "flutter/shell/common/animator.h"
 #include "flutter/shell/common/platform_view.h"
 #include "flutter/sky/engine/public/web/Sky.h"
@@ -77,14 +80,14 @@ Engine::Engine(PlatformView* platform_view)
           platform_view->rasterizer().GetWeakRasterizerPtr(),
           platform_view->GetVsyncWaiter(),
           this)),
-      activity_running_(true),
+      load_script_error_(tonic::kNoError),
+      activity_running_(false),
       have_surface_(false),
       weak_factory_(this) {}
 
-Engine::~Engine() {
-}
+Engine::~Engine() {}
 
-base::WeakPtr<Engine> Engine::GetWeakPtr() {
+ftl::WeakPtr<Engine> Engine::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 
@@ -99,6 +102,11 @@ void Engine::RunBundle(const std::string& bundle_path) {
   if (blink::IsRunningPrecompiledCode()) {
     runtime_->dart_controller()->RunFromPrecompiledSnapshot();
   } else {
+    std::vector<uint8_t> kernel;
+    if (GetAssetAsBuffer(blink::kKernelAssetKey, &kernel)) {
+      runtime_->dart_controller()->RunFromKernel(kernel.data(), kernel.size());
+      return;
+    }
     std::vector<uint8_t> snapshot;
     if (!GetAssetAsBuffer(blink::kSnapshotAssetKey, &snapshot))
       return;
@@ -131,7 +139,7 @@ void Engine::RunBundleAndSource(const std::string& bundle_path,
                                 const std::string& main,
                                 const std::string& packages) {
   TRACE_EVENT0("flutter", "Engine::RunBundleAndSource");
-  CHECK(!blink::IsRunningPrecompiledCode())
+  FTL_CHECK(!blink::IsRunningPrecompiledCode())
       << "Cannot run from source in a precompiled build.";
   std::string packages_path = packages;
   if (packages_path.empty())
@@ -139,7 +147,8 @@ void Engine::RunBundleAndSource(const std::string& bundle_path,
   if (!bundle_path.empty())
     ConfigureAssetBundle(bundle_path);
   ConfigureRuntime(GetScriptUriFromPath(main));
-  runtime_->dart_controller()->RunFromSource(main, packages_path);
+  load_script_error_ =
+      runtime_->dart_controller()->RunFromSource(main, packages_path);
 }
 
 void Engine::BeginFrame(ftl::TimePoint frame_time) {
@@ -165,6 +174,22 @@ std::string Engine::GetUIIsolateName() {
     return "";
   }
   return runtime_->GetIsolateName();
+}
+
+bool Engine::UIIsolateHasLivePorts() {
+  if (!runtime_)
+    return false;
+  return runtime_->HasLivePorts();
+}
+
+tonic::DartErrorHandleType Engine::GetUIIsolateLastError() {
+  if (!runtime_)
+    return tonic::kNoError;
+  return runtime_->GetLastError();
+}
+
+tonic::DartErrorHandleType Engine::GetLoadScriptError() {
+  return load_script_error_;
 }
 
 void Engine::OnOutputSurfaceCreated(const ftl::Closure& gpu_continuation) {
@@ -222,7 +247,7 @@ bool Engine::HandleLifecyclePlatformMessage(blink::PlatformMessage* message) {
 
 bool Engine::HandleNavigationPlatformMessage(
     ftl::RefPtr<blink::PlatformMessage> message) {
-  DCHECK(!runtime_);
+  FTL_DCHECK(!runtime_);
   const auto& data = message->data();
 
   rapidjson::Document document;
@@ -292,7 +317,7 @@ void Engine::ConfigureAssetBundle(const std::string& path) {
   // custom font loading in hot reload.
 
   if (::stat(path.c_str(), &stat_result) != 0) {
-    LOG(INFO) << "Could not configure asset bundle at path: " << path;
+    FTL_LOG(INFO) << "Could not configure asset bundle at path: " << path;
     return;
   }
 
@@ -303,9 +328,8 @@ void Engine::ConfigureAssetBundle(const std::string& path) {
   }
 
   if (S_ISREG(stat_result.st_mode)) {
-    base::FilePath tmp_path(path);
     asset_store_ = ftl::MakeRefCounted<blink::ZipAssetStore>(
-        blink::GetUnzipperProviderForPath(tmp_path.MaybeAsASCII()));
+        blink::GetUnzipperProviderForPath(path));
     return;
   }
 }
@@ -321,7 +345,9 @@ void Engine::ConfigureRuntime(const std::string& script_uri) {
 }
 
 void Engine::DidCreateMainIsolate(Dart_Isolate isolate) {
-  if (asset_store_) {
+  if (blink::Settings::Get().use_test_fonts) {
+    blink::TestFontSelector::Install();
+  } else if (asset_store_) {
     blink::AssetFontSelector::Install(asset_store_);
   }
 }

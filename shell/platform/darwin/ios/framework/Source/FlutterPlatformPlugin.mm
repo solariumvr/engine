@@ -13,12 +13,12 @@ namespace {
 
 constexpr char kTextPlainFormat[] = "text/plain";
 
-NSDictionary* GetDirectoryOfType(NSSearchPathDirectory dir) {
+NSString* GetDirectoryOfType(NSSearchPathDirectory dir) {
   NSArray* paths =
       NSSearchPathForDirectoriesInDomains(dir, NSUserDomainMask, YES);
   if (paths.count == 0)
     return nil;
-  return @{ @"path": paths.firstObject };
+  return paths.firstObject;
 }
 
 }  // namespaces
@@ -41,42 +41,45 @@ using namespace shell;
 
 @implementation FlutterPlatformPlugin
 
-- (NSString *)messageName {
-  return @"flutter/platform";
-}
-
-- (NSDictionary*)didReceiveJSON:(NSDictionary*)message {
-  NSString* method = message[@"method"];
-  NSArray* args = message[@"args"];
+- (void)handleMethodCall:(FlutterMethodCall*)call resultReceiver:(FlutterResultReceiver)resultReceiver {
+  NSString* method = call.method;
+  id args = call.arguments;
   if ([method isEqualToString:@"SystemSound.play"]) {
-    [self playSystemSound:args.firstObject];
+    [self playSystemSound:args];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"HapticFeedback.vibrate"]) {
     [self vibrateHapticFeedback];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"UrlLauncher.launch"]) {
-    [self launchURL:args.firstObject];
+    [self launchURL:args];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"SystemChrome.setPreferredOrientations"]) {
-    [self setSystemChromePreferredOrientatations:args.firstObject];
+    [self setSystemChromePreferredOrientations:args];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"SystemChrome.setApplicationSwitcherDescription"]) {
-    [self setSystemChromeApplicationSwitcherDescription:args.firstObject];
+    [self setSystemChromeApplicationSwitcherDescription:args];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"SystemChrome.setEnabledSystemUIOverlays"]) {
-    [self setSystemChromeEnabledSystemUIOverlays:args.firstObject];
+    [self setSystemChromeEnabledSystemUIOverlays:args];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"SystemChrome.setSystemUIOverlayStyle"]) {
-    [self setSystemChromeSystemUIOverlayStyle:args.firstObject];
+    [self setSystemChromeSystemUIOverlayStyle:args];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"SystemNavigator.pop"]) {
     [self popSystemNavigator];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"Clipboard.getData"]) {
-    return [self getClipboardData:args.firstObject];
+    resultReceiver([self getClipboardData:args]);
   } else if ([method isEqualToString:@"Clipboard.setData"]) {
-    [self setClipboardData:args.firstObject];
+    [self setClipboardData:args];
+    resultReceiver(nil);
   } else if ([method isEqualToString:@"PathProvider.getTemporaryDirectory"]) {
-    return [self getPathProviderTemporaryDirectory];
+    resultReceiver([self getPathProviderTemporaryDirectory]);
   } else if ([method isEqualToString:@"PathProvider.getApplicationDocumentsDirectory"]) {
-    return [self getPathProviderApplicationDocumentsDirectory];
+    resultReceiver([self getPathProviderApplicationDocumentsDirectory]);
   } else {
-    // TODO(abarth): We should signal an error here that gets reported back to
-    // Dart.
+    resultReceiver(FlutterMethodNotImplemented);
   }
-  return nil;
 }
 
 - (void)playSystemSound:(NSString*)soundType {
@@ -99,7 +102,7 @@ using namespace shell;
   return @{ @"succes": @(success) };
 }
 
-- (void)setSystemChromePreferredOrientatations:(NSArray*)orientations {
+- (void)setSystemChromePreferredOrientations:(NSArray*)orientations {
   UIInterfaceOrientationMask mask = 0;
 
   if (orientations.count == 0) {
@@ -188,11 +191,11 @@ using namespace shell;
   pasteboard.string = data[@"text"];
 }
 
-- (NSDictionary*)getPathProviderTemporaryDirectory {
+- (NSString*)getPathProviderTemporaryDirectory {
   return GetDirectoryOfType(NSCachesDirectory);
 }
 
-- (NSDictionary*)getPathProviderApplicationDocumentsDirectory {
+- (NSString*)getPathProviderApplicationDocumentsDirectory {
   return GetDirectoryOfType(NSDocumentDirectory);
 }
 

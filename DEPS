@@ -22,18 +22,17 @@ vars = {
   'fuchsia_git': 'https://fuchsia.googlesource.com',
   'skia_git': 'https://skia.googlesource.com',
   'github_git': 'https://github.com',
-  'base_revision': 'b2412302ed4e45bfb47d7b5c0c3418077009e1ce',
-  'skia_revision': '06a65e2799eaead18f778792801406aff4aec0d9',
+  'skia_revision': '342977ced701d06df2b3d2eedd8b64aeae1eb5c5',
 
   # Note: When updating the Dart revision, ensure that all entries that are
   # dependencies of dart are also updated
-  'dart_revision': 'ea94a5dcb0be8af3a3ead5d4be0813e55bd8920e',
-  'dart_boringssl_gen_revision': '62c20247d582444cb2804f9ea4e3abaa6e47f6a5',
-  'dart_boringssl_revision': '8d343b44bbab829d1a28fdef650ca95f7db4412e',
+  'dart_revision': 'a6804167162f230bf8498289a61dc7efebf32b0c',
+  'dart_boringssl_gen_revision': '1a810313a0290e1caace9da73fa3ab89995ad2c7',
+  'dart_boringssl_revision': 'd519bf6be0b447fb80fbc539d4bff4479b5482a2',
   'dart_observatory_packages_revision': '26aad88f1c1915d39bbcbff3cad589e2402fdcf1',
-  'dart_root_certificates_revision': 'aed07942ce98507d2be28cbd29e879525410c7fc',
+  'dart_root_certificates_revision': '0068d8911140e591ebb750af296e81940a9906f5',
 
-  'buildtools_revision': '1f4c1c3bd3bd4c991e6565a0dc509c8d8a3f90b4',
+  'buildtools_revision': '5655267acc2b1c672aec43bfbd28c645908fcd74',
 }
 
 # Only these hosts are allowed for dependencies in this DEPS file.
@@ -46,7 +45,7 @@ allowed_hosts = [
 ]
 
 deps = {
-  'src': 'https://github.com/flutter/buildroot.git' + '@' + 'ce8bf5debe5b9ad4d4c6b19f1e641a5de0d5fde2',
+  'src': 'https://github.com/flutter/buildroot.git' + '@' + 'effec4955ea3444bfc7c78a7a2f60836cf722f67',
 
    # Fuchsia compatibility
    #
@@ -55,10 +54,10 @@ deps = {
    # and not have to specific specific hashes.
 
   'src/lib/ftl':
-   Var('fuchsia_git') + '/ftl' + '@' + '9f51f24056554352b045fda338e9101c0e5af272',
+   Var('fuchsia_git') + '/ftl' + '@' + 'bb82d5f52ecca65650817a1c31c1f49eca54237a',
 
   'src/lib/tonic':
-   Var('fuchsia_git') + '/tonic' + '@' + '4214b35e02a1286a5fb98895d0c480fa0da10f6d',
+   Var('fuchsia_git') + '/tonic' + '@' + '837a249e73593bd22c4a071778192d1b4f1f931d',
 
   'src/lib/zip':
    Var('fuchsia_git') + '/zip' + '@' + '92dc87ca645fe8e9f5151ef6dac86d8311a7222f',
@@ -74,18 +73,8 @@ deps = {
    # As part of integrating with Fuchsia, we should eventually remove all these
    # Chromium-style dependencies.
 
-  'src/base':
-   Var('github_git') + '/flutter/base.git' + '@' +  Var('base_revision'),
-
   'src/buildtools':
    Var('fuchsia_git') + '/buildtools' + '@' +  Var('buildtools_revision'),
-
-  # TODO(abarth): Remove in favor of //third_party/gtest
-  'src/testing/gtest':
-   Var('chromium_git') + '/external/googletest.git' + '@' + '23574bf2333f834ff665f894c97bef8a5b33a0a9',
-
-  'src/testing/gmock':
-   Var('chromium_git') + '/external/googlemock.git' + '@' + '29763965ab52f24565299976b936d1265cb6a271',
 
   'src/third_party/icu':
    Var('chromium_git') + '/chromium/deps/icu.git' + '@' + 'c3f79166089e5360c09e3053fce50e6e296c3204',
@@ -104,7 +93,7 @@ deps = {
    '/external/github.com/dart-lang/observatory_pub_packages' + '@' +
    Var('dart_observatory_packages_revision'),
 
-  'src/dart/third_party/root_certificates':
+  'src/third_party/root_certificates':
    Var('chromium_git') +
    '/external/github.com/dart-lang/root_certificates' + '@' +
    Var('dart_root_certificates_revision'),
@@ -112,11 +101,11 @@ deps = {
   'src/third_party/skia':
    Var('skia_git') + '/skia.git' + '@' +  Var('skia_revision'),
 
-  'src/third_party/yasm/source/patched-yasm':
-   Var('chromium_git') + '/chromium/deps/yasm/patched-yasm.git' + '@' + '4671120cd8558ce62ee8672ebf3eb6f5216f909b',
-
   'src/third_party/libjpeg-turbo':
    Var('skia_git') + '/third_party/libjpeg-turbo.git' + '@' + 'debddedc75850bcdeb8a57258572f48b802a4bb3',
+
+  'src/third_party/gyp':
+   Var('chromium_git') + '/external/gyp.git' + '@' + '6ee91ad8659871916f9aa840d42e1513befdf638',
 
    # Headers for Vulkan 1.0
    'src/third_party/vulkan':
@@ -131,18 +120,6 @@ deps_os = {
   'android': {
     'src/third_party/colorama/src':
      Var('chromium_git') + '/external/colorama.git' + '@' + '799604a1041e9b3bc5d2789ecbd7e8db2e18e6b8',
-
-    'src/third_party/jsr-305/src':
-        Var('chromium_git') + '/external/jsr-305.git' + '@' + '642c508235471f7220af6d5df2d3210e3bfc0919',
-
-    'src/third_party/junit/src':
-      Var('chromium_git') + '/external/junit.git' + '@' + '45a44647e7306262162e1346b750c3209019f2e1',
-
-    'src/third_party/mockito/src':
-      Var('chromium_git') + '/external/mockito/mockito.git' + '@' + 'ed99a52e94a84bd7c467f2443b475a22fcc6ba8e',
-
-    'src/third_party/robolectric/lib':
-      Var('chromium_git') + '/chromium/third_party/robolectric.git' + '@' + '6b63c99a8b6967acdb42cbed0adb067c80efc810',
 
     'src/third_party/freetype2':
        Var('fuchsia_git') + '/third_party/freetype2' + '@' + 'e23a030e9b43c648249477fdf7bf5305d2cc8f59',
@@ -163,6 +140,12 @@ hooks = [
     ],
   },
   {
+    # Update the Windows toolchain if necessary.
+    'name': 'win_toolchain',
+    'pattern': '.',
+    'action': ['python', 'src/build/vs_toolchain.py', 'update'],
+  },
+  {
     'name': 'download_android_tools',
     'pattern': '.',
     'action': [
@@ -171,9 +154,9 @@ hooks = [
     ],
   },
   {
-    'name': 'clang',
+    'name': 'buildtools',
     'pattern': '.',
-    'action': ['/bin/bash', 'src/buildtools/update.sh', '--toolchain', '--ninja', '--gn'],
+    'action': ['python', 'src/tools/buildtools/update.py'],
   },
   {
     # Pull dart sdk if needed

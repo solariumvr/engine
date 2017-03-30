@@ -129,8 +129,7 @@ PassRefPtr<SimpleFontData> FontCache::fallbackOnStandardFontStyle(
     return nullptr;
 }
 
-//#if !OS(WIN) && !OS(ANDROID)
-#if !OS(ANDROID)
+#if !OS(WIN) && !OS(ANDROID) && !OS(IOS)
 PassRefPtr<SimpleFontData> FontCache::fallbackFontForCharacter(const FontDescription& fontDescription, UChar32 c, const SimpleFontData*)
 {
     // First try the specified font with standard style & weight.
@@ -228,7 +227,7 @@ sk_sp<SkTypeface> FontCache::createTypeface(const FontDescription& fontDescripti
 }
 #endif
 
-//#if !OS(WIN)
+#if !OS(WIN)
 FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontDescription, const FontFaceCreationParams& creationParams, float fontSize)
 {
     CString name;
@@ -245,6 +244,6 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
         fontDescription.useSubpixelPositioning());
     return result;
 }
-//#endif // !OS(WIN)
+#endif // !OS(WIN)
 
 } // namespace blink

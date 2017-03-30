@@ -11,18 +11,15 @@
 #include "flutter/shell/common/rasterizer.h"
 #include "flutter/shell/common/vsync_waiter_fallback.h"
 #include "lib/ftl/functional/make_copyable.h"
+#include "third_party/skia/include/gpu/GrContextOptions.h"
 #include "third_party/skia/include/gpu/gl/GrGLInterface.h"
-#include "flutter/flow/open_gl.h"
 
 namespace shell {
 
 PlatformView::PlatformView(std::unique_ptr<Rasterizer> rasterizer)
     : rasterizer_(std::move(rasterizer)),
       size_(SkISize::Make(0, 0)),
-      weak_factory_(this) {
-  blink::Threads::UI()->PostTask(
-      [self = GetWeakPtr()] { Shell::Shared().AddPlatformView(self); });
-}
+      weak_factory_(this) {}
 
 PlatformView::~PlatformView() {
   blink::Threads::UI()->PostTask([] { Shell::Shared().PurgePlatformViews(); });
@@ -36,6 +33,13 @@ PlatformView::~PlatformView() {
 
 void PlatformView::CreateEngine() {
   engine_.reset(new Engine(this));
+}
+
+// Add this to the shell's list of PlatformVIews.
+// Subclasses should call this after the object is fully constructed.
+void PlatformView::PostAddToShellTask() {
+  blink::Threads::UI()->PostTask(
+      [self = GetWeakPtr()] { Shell::Shared().AddPlatformView(self); });
 }
 
 void PlatformView::DispatchPlatformMessage(
@@ -73,6 +77,7 @@ void PlatformView::NotifyCreated(std::unique_ptr<Surface> surface) {
 void PlatformView::NotifyCreated(std::unique_ptr<Surface> surface,
                                  ftl::Closure caller_continuation) {
   ftl::AutoResetWaitableEvent latch;
+
   auto ui_continuation = ftl::MakeCopyable([
     this,                          //
     surface = std::move(surface),  //
@@ -113,7 +118,7 @@ void PlatformView::NotifyDestroyed() {
   latch.Wait();
 }
 
-base::WeakPtr<PlatformView> PlatformView::GetWeakPtr() {
+ftl::WeakPtr<PlatformView> PlatformView::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 
@@ -154,15 +159,29 @@ void PlatformView::SetupResourceContextOnIOThreadPerform(
   bool current = ResourceContextMakeCurrent();
 
   if (!current) {
-    LOG(WARNING)
+    FTL_LOG(WARNING)
         << "WARNING: Could not setup an OpenGL context on the resource loader.";
     latch->Signal();
     return;
   }
 
+  GrContextOptions options;
+  // There is currently a bug with doing GPU YUV to RGB conversions on the IO
+  // thread. The necessary work isn't being flushed or synchronized with the
+  // other threads correctly, so the textures end up blank.  For now, suppress
+  // that feature, which will cause texture uploads to do CPU YUV conversion.
+  options.fDisableGpuYUVConversion = true;
+
   blink::ResourceContext::Set(GrContext::Create(
       GrBackend::kOpenGL_GrBackend,
-      0));
+      reinterpret_cast<GrBackendContext>(GrGLCreateNativeInterface()),
+      options));
+
+  // Do not cache textures created by the image decoder.  These textures should
+  // be deleted when they are no longer referenced by an SkImage.
+  if (blink::ResourceContext::Get())
+    blink::ResourceContext::Get()->setResourceCacheLimits(0, 0);
+
   latch->Signal();
 }
 

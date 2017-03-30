@@ -212,9 +212,7 @@ source_set("wtf") {
   }
 }
 
-executable("unittests") {
-  output_name = "flutter_wtf_unittests"
-
+executable("flutter_wtf_unittests") {
   testonly = true
 
   sources = [
@@ -231,6 +229,7 @@ executable("unittests") {
     "StringExtrasTest.cpp",
     "StringHasherTest.cpp",
     "TemporaryChangeTest.cpp",
+    "VectorTest.cpp",
     "testing/RunAllTests.cpp",
     "testing/WTFTestHelpers.cpp",
     "testing/WTFTestHelpers.h",
@@ -241,10 +240,12 @@ executable("unittests") {
     "text/StringBuilderTest.cpp",
     "text/StringImplTest.cpp",
     "text/StringOperatorsTest.cpp",
-    "text/TextCodecReplacementTest.cpp",
     "text/TextCodecUTF8Test.cpp",
-    "text/WTFStringTest.cpp",
-    "VectorTest.cpp",
+
+    # The following tests depend on either ICU or the locale. Disable them for
+    # now.
+    # "text/TextCodecReplacementTest.cpp",
+    # "text/WTFStringTest.cpp",
   ]
 
   configs += [
@@ -254,6 +255,9 @@ executable("unittests") {
 
   deps = [
     ":wtf",
+
+    # Does not use //flutter/testing because it needs and provides its own main
+    # function in RunAllTests.cpp.
     "//third_party/gtest",
   ]
 }

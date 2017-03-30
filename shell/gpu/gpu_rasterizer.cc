@@ -16,7 +16,8 @@
 
 namespace shell {
 
-GPURasterizer::GPURasterizer() : weak_factory_(this) {
+GPURasterizer::GPURasterizer(std::unique_ptr<flow::ProcessInfo> info)
+    : compositor_context_(std::move(info)), weak_factory_(this) {
   auto weak_ptr = weak_factory_.GetWeakPtr();
   blink::Threads::Gpu()->PostTask(
       [weak_ptr]() { Shell::Shared().AddRasterizer(weak_ptr); });
@@ -27,7 +28,7 @@ GPURasterizer::~GPURasterizer() {
   Shell::Shared().PurgeRasterizers();
 }
 
-base::WeakPtr<Rasterizer> GPURasterizer::GetWeakRasterizerPtr() {
+ftl::WeakPtr<Rasterizer> GPURasterizer::GetWeakRasterizerPtr() {
   return weak_factory_.GetWeakPtr();
 }
 
@@ -65,7 +66,9 @@ void GPURasterizer::Clear(SkColor color, const SkISize& size) {
 
 void GPURasterizer::Teardown(
     ftl::AutoResetWaitableEvent* teardown_completion_event) {
-  surface_.reset();
+  if (surface_) {
+    surface_.reset();
+  }
   last_layer_tree_.reset();
   compositor_context_.OnGrContextDestroyed();
   teardown_completion_event->Signal();
@@ -111,8 +114,6 @@ void GPURasterizer::DoDraw(std::unique_ptr<flow::LayerTree> layer_tree) {
 
   DrawToSurface(*layer_tree);
 
-//  DrawToTraceIfNecessary(*layer_tree);
-
   last_layer_tree_ = std::move(layer_tree);
 }
 
@@ -131,54 +132,12 @@ void GPURasterizer::DrawToSurface(flow::LayerTree& layer_tree) {
 
   auto compositor_frame =
       compositor_context_.AcquireFrame(surface_->GetContext(), canvas);
-	surface_->GetContext()->resetContext();
+
   canvas->clear(SK_ColorBLACK);
 
   layer_tree.Raster(compositor_frame);
 
   frame->Submit();
 }
-
-//bool GPURasterizer::ShouldDrawToTrace(flow::LayerTree& layer_tree) {
-//    if (Shell::Shared().tracing_controller().picture_tracing_enabled()) {
-//        // Picture tracing is unconditionally enabled for all frames by the tracing
-//        // controller.
-//        return true;
-//    }
-//
-//    const uint32_t threshold_interval = layer_tree.rasterizer_tracing_threshold();
-//
-//    if (threshold_interval == 0) {
-//        // An interval of zero means tracing is disabled.
-//        return false;
-//    }
-//
-//    return compositor_context_.frame_time().LastLap().ToMillisecondsF() >
-//           threshold_interval * 1e3 / 60.0;
-//}
-//
-//void GPURasterizer::DrawToTraceIfNecessary(flow::LayerTree& layer_tree) {
-//    if (!ShouldDrawToTrace(layer_tree)) {
-//        return;
-//    }
-//
-//    auto& tracing_controller = Shell::Shared().tracing_controller();
-//
-//    std::string path = tracing_controller.PictureTracingPathForCurrentTime();
-//    LOG(INFO) << "Frame threshold exceeded. Capturing SKP to " << path;
-//
-//    SkPictureRecorder recorder;
-//
-//    recorder.beginRecording(layer_tree.frame_size().width(),
-//                            layer_tree.frame_size().height());
-//
-//    auto compositor_frame = compositor_context_.AcquireFrame(
-//            nullptr, recorder.getRecordingCanvas(), false);
-//    layer_tree.Raster(compositor_frame, true /* ignore raster cache */);
-//
-//    sk_sp<SkPicture> picture = recorder.finishRecordingAsPicture();
-//
-//    SerializePicture(path, picture.get());
-//}
 
 }  // namespace shell

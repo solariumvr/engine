@@ -7,7 +7,7 @@
 
 #include "flutter/flow/compositor_context.h"
 #include "flutter/shell/common/rasterizer.h"
-#include "base/memory/weak_ptr.h"
+#include "lib/ftl/memory/weak_ptr.h"
 #include "lib/ftl/synchronization/waitable_event.h"
 
 namespace shell {
@@ -16,7 +16,7 @@ class Surface;
 
 class GPURasterizer : public Rasterizer {
  public:
-  GPURasterizer();
+  GPURasterizer(std::unique_ptr<flow::ProcessInfo> info);
 
   ~GPURasterizer() override;
 
@@ -29,7 +29,7 @@ class GPURasterizer : public Rasterizer {
   void Teardown(
       ftl::AutoResetWaitableEvent* teardown_completion_event) override;
 
-  base::WeakPtr<Rasterizer> GetWeakRasterizerPtr() override;
+  ftl::WeakPtr<Rasterizer> GetWeakRasterizerPtr() override;
 
   flow::LayerTree* GetLastLayerTree() override;
 
@@ -39,17 +39,13 @@ class GPURasterizer : public Rasterizer {
   std::unique_ptr<Surface> surface_;
   flow::CompositorContext compositor_context_;
   std::unique_ptr<flow::LayerTree> last_layer_tree_;
-  base::WeakPtrFactory<GPURasterizer> weak_factory_;
+  ftl::WeakPtrFactory<GPURasterizer> weak_factory_;
 
   void DoDraw(std::unique_ptr<flow::LayerTree> layer_tree);
 
   void DrawToSurface(flow::LayerTree& layer_tree);
 
-//  bool ShouldDrawToTrace(flow::LayerTree& layer_tree);
-
-//  void DrawToTraceIfNecessary(flow::LayerTree& layer_tree);
-
-  DISALLOW_COPY_AND_ASSIGN(GPURasterizer);
+  FTL_DISALLOW_COPY_AND_ASSIGN(GPURasterizer);
 };
 
 }  // namespace shell

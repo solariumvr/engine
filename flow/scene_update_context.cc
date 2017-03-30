@@ -78,7 +78,6 @@ mozart::NodePtr SceneUpdateContext::FinalizeCurrentPaintTask(
   resource->get_image()->image = std::move(image);
 
   auto node = mozart::Node::New();
-  node->hit_test_behavior = mozart::HitTestBehavior::New();
   node->op = mozart::NodeOp::New();
   node->op->set_image(mozart::ImageNodeOp::New());
   node->op->get_image()->content_rect = mozart::RectF::From(bounds);
@@ -109,7 +108,8 @@ void SceneUpdateContext::ExecutePaintTasks(
     DCHECK(task.surface);
     SkCanvas* canvas = task.surface->getCanvas();
     Layer::PaintContext context = {*canvas, frame.context().frame_time(),
-                                   frame.context().engine_time()};
+                                   frame.context().engine_time(),
+                                   frame.context().memory_usage()};
 
     canvas->clear(SK_ColorTRANSPARENT);
     canvas->scale(task.scaleX, task.scaleY);

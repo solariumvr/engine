@@ -90,7 +90,10 @@ enum TextAlign {
   right,
 
   /// Align the text in the center of the container
-  center
+  center,
+
+  /// Stretch each line of text to fill the width of the container
+  justify
 }
 
 /// A horizontal line used for aligning text
@@ -375,12 +378,12 @@ class TextStyle {
 //
 //  - Element 3: The enum index of the |fontStyle|.
 //
-//  - Element 4: The value of |lineCount|.
+//  - Element 4: The value of |maxLines|.
 //
 Int32List _encodeParagraphStyle(TextAlign textAlign,
                                 FontWeight fontWeight,
                                 FontStyle fontStyle,
-                                int lineCount,
+                                int maxLines,
                                 String fontFamily,
                                 double fontSize,
                                 double lineHeight,
@@ -398,9 +401,9 @@ Int32List _encodeParagraphStyle(TextAlign textAlign,
     result[0] |= 1 << 3;
     result[3] = fontStyle.index;
   }
-  if (lineCount != null) {
+  if (maxLines != null) {
     result[0] |= 1 << 4;
-    result[4] = lineCount;
+    result[4] = maxLines;
   }
   if (fontFamily != null) {
     result[0] |= 1 << 5;
@@ -428,7 +431,7 @@ class ParagraphStyle {
   /// * `textAlign`: The alignment of the text within the lines of the paragraph.
   /// * `fontWeight`: The typeface thickness to use when painting the text (e.g., bold).
   /// * `fontStyle`: The typeface variant to use when drawing the letters (e.g., italics).
-  /// * `lineCount`: Currently not implemented.
+  /// * `maxLines`: The maximum number of lines painted.
   /// * `fontFamily`: The name of the font to use when painting the text (e.g., Roboto).
   /// * `fontSize`: The size of glyphs (in logical pixels) to use when painting the text.
   /// * `lineHeight`: The minimum height of the line boxes, as a multiple of the font size.
@@ -437,7 +440,7 @@ class ParagraphStyle {
     TextAlign textAlign,
     FontWeight fontWeight,
     FontStyle fontStyle,
-    int lineCount,
+    int maxLines,
     String fontFamily,
     double fontSize,
     double lineHeight,
@@ -445,7 +448,7 @@ class ParagraphStyle {
   }) : _encoded = _encodeParagraphStyle(textAlign,
                                         fontWeight,
                                         fontStyle,
-                                        lineCount,
+                                        maxLines,
                                         fontFamily,
                                         fontSize,
                                         lineHeight,
@@ -453,9 +456,7 @@ class ParagraphStyle {
        _fontFamily = fontFamily,
        _fontSize = fontSize,
        _lineHeight = lineHeight,
-       _ellipsis = ellipsis {
-    assert(lineCount == null);
-  }
+       _ellipsis = ellipsis;
 
   final Int32List _encoded;
   final String _fontFamily;
@@ -481,18 +482,18 @@ class ParagraphStyle {
     return true;
   }
 
-  int get hashCode => hashValues(hashList(_encoded), _lineHeight);
+  int get hashCode => hashValues(hashList(_encoded), _lineHeight, _ellipsis);
 
   String toString() {
     return 'ParagraphStyle('
              'textAlign: ${   _encoded[0] & 0x02 == 0x02 ? TextAlign.values[_encoded[1]]    : "unspecified"}, '
              'fontWeight: ${  _encoded[0] & 0x04 == 0x04 ? FontWeight.values[_encoded[2]]   : "unspecified"}, '
              'fontStyle: ${   _encoded[0] & 0x08 == 0x08 ? FontStyle.values[_encoded[3]]    : "unspecified"}, '
-             'lineCount: ${   _encoded[0] & 0x10 == 0x10 ? _encoded[4]                      : "unspecified"}, '
+             'maxLines: ${    _encoded[0] & 0x10 == 0x10 ? _encoded[4]                      : "unspecified"}, '
              'fontFamily: ${  _encoded[0] & 0x20 == 0x20 ? _fontFamily                      : "unspecified"}, '
              'fontSize: ${    _encoded[0] & 0x40 == 0x40 ? _fontSize                        : "unspecified"}, '
              'lineHeight: ${  _encoded[0] & 0x80 == 0x80 ? "${_lineHeight}x"                : "unspecified"}, '
-             'ellipsis: ${    _encoded[0] & 0x100 == 0x100 ? "\"$_ellipsis\""                : "unspecified"}'
+             'ellipsis: ${    _encoded[0] & 0x100 == 0x100 ? "\"$_ellipsis\""               : "unspecified"}'
            ')';
   }
 }
@@ -682,8 +683,12 @@ abstract class Paragraph extends NativeFieldWrapperClass2 {
   double get alphabeticBaseline native "Paragraph_alphabeticBaseline";
 
   /// The distance from the top of the paragraph to the ideographic
-   /// baseline of the first line, in logical pixels.
+  /// baseline of the first line, in logical pixels.
   double get ideographicBaseline native "Paragraph_ideographicBaseline";
+
+  /// True if there is more vertical content, but the text was truncated
+  /// because we reached [ParagraphStyle.maxLines] lines of text.
+  bool get didExceedMaxLines native "Paragraph_didExceedMaxLines";
 
   /// Computes the size and position of each glyph in the paragraph.
   void layout(ParagraphConstraints constraints) => _layout(constraints.width);

@@ -8,9 +8,8 @@
 #include <unordered_map>
 
 #include "flutter/lib/ui/window/platform_message.h"
-#include "flutter/shell/platform/darwin/ios/framework/Headers/FlutterAsyncMessageListener.h"
-#include "flutter/shell/platform/darwin/ios/framework/Headers/FlutterMessageListener.h"
-#include "base/memory/weak_ptr.h"
+#include "flutter/shell/platform/darwin/ios/framework/Headers/FlutterBinaryMessenger.h"
+#include "lib/ftl/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -21,18 +20,14 @@ class PlatformMessageRouter {
 
   void HandlePlatformMessage(ftl::RefPtr<blink::PlatformMessage> message);
 
-  void SetMessageListener(const std::string& channel,
-                          NSObject<FlutterMessageListener>* listener);
-
-  void SetAsyncMessageListener(const std::string& channel,
-                               NSObject<FlutterAsyncMessageListener>* listener);
+  void SetMessageHandler(const std::string& channel,
+                         FlutterBinaryMessageHandler handler);
 
  private:
-  std::unordered_map<std::string, NSObject<FlutterMessageListener>*> listeners_;
-  std::unordered_map<std::string, NSObject<FlutterAsyncMessageListener>*>
-      async_listeners_;
+  std::unordered_map<std::string, FlutterBinaryMessageHandler>
+      message_handlers_;
 
-  DISALLOW_COPY_AND_ASSIGN(PlatformMessageRouter);
+  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformMessageRouter);
 };
 
 }  // namespace shell

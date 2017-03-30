@@ -6,44 +6,55 @@
 #define FLUTTER_CONTENT_HANDLER_APP_H_
 
 #include <memory>
-#include <thread>
 #include <unordered_set>
 
-#include "apps/modular/lib/app/application_context.h"
-#include "apps/modular/services/application/application_runner.fidl.h"
+#include "application/lib/app/application_context.h"
+#include "application/services/application_runner.fidl.h"
 #include "flutter/content_handler/application_controller_impl.h"
-#include "base/macros.h"
+#include "flutter/content_handler/content_handler_thread.h"
+#include "lib/ftl/macros.h"
+#include "lib/ftl/synchronization/waitable_event.h"
 
 namespace flutter_runner {
 
-class App : public modular::ApplicationRunner {
+class App : public app::ApplicationRunner {
  public:
   App();
   ~App();
 
-  // |modular::ApplicationRunner| implementation:
+  static App& Shared();
 
-  void StartApplication(modular::ApplicationPackagePtr application,
-                        modular::ApplicationStartupInfoPtr startup_info,
-                        fidl::InterfaceRequest<modular::ApplicationController>
+  // |app::ApplicationRunner| implementation:
+
+  void StartApplication(app::ApplicationPackagePtr application,
+                        app::ApplicationStartupInfoPtr startup_info,
+                        fidl::InterfaceRequest<app::ApplicationController>
                             controller) override;
 
   void Destroy(ApplicationControllerImpl* controller);
 
+  struct PlatformViewInfo {
+    uintptr_t view_id;
+    int64_t isolate_id;
+    std::string isolate_name;
+  };
+
+  void WaitForPlatformViewIds(std::vector<PlatformViewInfo>* platform_view_ids);
+
  private:
-  void StopThreads();
+  void WaitForPlatformViewsIdsUIThread(
+    std::vector<PlatformViewInfo>* platform_view_ids,
+    ftl::AutoResetWaitableEvent* latch);
 
-  std::unique_ptr<modular::ApplicationContext> context_;
-  std::thread gpu_thread_;
-  std::thread io_thread_;
-
-  fidl::BindingSet<modular::ApplicationRunner> runner_bindings_;
-
+  std::unique_ptr<app::ApplicationContext> context_;
+  std::unique_ptr<Thread> gpu_thread_;
+  std::unique_ptr<Thread> io_thread_;
+  fidl::BindingSet<app::ApplicationRunner> runner_bindings_;
   std::unordered_map<ApplicationControllerImpl*,
                      std::unique_ptr<ApplicationControllerImpl>>
       controllers_;
 
-  DISALLOW_COPY_AND_ASSIGN(App);
+  FTL_DISALLOW_COPY_AND_ASSIGN(App);
 };
 
 }  // namespace flutter_runner

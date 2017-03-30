@@ -10,10 +10,10 @@
 #include "flutter/flow/compositor_context.h"
 #include "flutter/runtime/embedder_resources.h"
 #include "flutter/shell/common/engine.h"
+#include "flutter/shell/common/picture_serializer.h"
 #include "flutter/shell/common/rasterizer.h"
 #include "flutter/shell/common/shell.h"
-#include "flutter/shell/common/picture_serializer.h"
-#include "base/logging.h"
+#include "lib/ftl/logging.h"
 #include "lib/tonic/dart_binding_macros.h"
 #include "lib/tonic/dart_library_natives.h"
 #include "lib/tonic/logging/dart_invoke.h"
@@ -31,6 +31,7 @@ using tonic::DartLibraryNatives;
 using blink::EmbedderResources;
 using tonic::DartInvokeField;
 using tonic::LogIfError;
+using tonic::ToDart;
 
 namespace {
 
@@ -41,12 +42,12 @@ constexpr char kDiagnosticServerScript[] = "/diagnostic_server.dart";
 Dart_NativeFunction GetNativeFunction(Dart_Handle name,
                                       int argument_count,
                                       bool* auto_setup_scope) {
-  CHECK(g_natives);
+  FTL_CHECK(g_natives);
   return g_natives->GetNativeFunction(name, argument_count, auto_setup_scope);
 }
 
 const uint8_t* GetSymbol(Dart_NativeFunction native_function) {
-  CHECK(g_natives);
+  FTL_CHECK(g_natives);
   return g_natives->GetSymbol(native_function);
 }
 
@@ -60,7 +61,7 @@ void SendNull(Dart_Port port_id) {
 
 DART_NATIVE_CALLBACK_STATIC(DiagnosticServer, HandleSkiaPictureRequest);
 
-void DiagnosticServer::Start() {
+void DiagnosticServer::Start(uint32_t port) {
   if (!g_natives) {
     g_natives = new DartLibraryNatives();
     g_natives->Register({
@@ -74,7 +75,7 @@ void DiagnosticServer::Start() {
   const char* source = nullptr;
   int source_length =
       resources.ResourceLookup(kDiagnosticServerScript, &source);
-  DCHECK(source_length != EmbedderResources::kNoSuchInstance);
+  FTL_DCHECK(source_length != EmbedderResources::kNoSuchInstance);
 
   Dart_Handle diagnostic_library = Dart_LoadLibrary(
       Dart_NewStringFromCString("dart:diagnostic_server"), Dart_Null(),
@@ -82,27 +83,27 @@ void DiagnosticServer::Start() {
                              source_length),
       0, 0);
 
-  CHECK(!LogIfError(diagnostic_library));
-  CHECK(!LogIfError(Dart_SetNativeResolver(diagnostic_library,
+  FTL_CHECK(!LogIfError(diagnostic_library));
+  FTL_CHECK(!LogIfError(Dart_SetNativeResolver(diagnostic_library,
                                                GetNativeFunction, GetSymbol)));
 
-  CHECK(!LogIfError(Dart_LibraryImportLibrary(
+  FTL_CHECK(!LogIfError(Dart_LibraryImportLibrary(
       Dart_RootLibrary(), diagnostic_library, Dart_Null())));
 
-  CHECK(!LogIfError(Dart_FinalizeLoading(false)));
+  FTL_CHECK(!LogIfError(Dart_FinalizeLoading(false)));
 
-  DartInvokeField(Dart_RootLibrary(), "diagnosticServerStart", {});
+  DartInvokeField(Dart_RootLibrary(), "diagnosticServerStart", {ToDart(port)});
 }
 
 void DiagnosticServer::HandleSkiaPictureRequest(Dart_Handle send_port) {
   Dart_Port port_id;
-  CHECK(!LogIfError(Dart_SendPortGetId(send_port, &port_id)));
+  FTL_CHECK(!LogIfError(Dart_SendPortGetId(send_port, &port_id)));
 
   blink::Threads::Gpu()->PostTask([port_id]() { SkiaPictureTask(port_id); });
 }
 
 void DiagnosticServer::SkiaPictureTask(Dart_Port port_id) {
-  std::vector<base::WeakPtr<Rasterizer>> rasterizers;
+  std::vector<ftl::WeakPtr<Rasterizer>> rasterizers;
   Shell::Shared().GetRasterizers(&rasterizers);
   if (rasterizers.size() != 1) {
     SendNull(port_id);
@@ -125,7 +126,7 @@ void DiagnosticServer::SkiaPictureTask(Dart_Port port_id) {
   recorder.beginRecording(SkRect::MakeWH(layer_tree->frame_size().width(),
                                          layer_tree->frame_size().height()));
 
-  flow::CompositorContext compositor_context;
+  flow::CompositorContext compositor_context(nullptr);
   flow::CompositorContext::ScopedFrame frame = compositor_context.AcquireFrame(
       nullptr, recorder.getRecordingCanvas(), false);
   layer_tree->Raster(frame);
@@ -135,7 +136,7 @@ void DiagnosticServer::SkiaPictureTask(Dart_Port port_id) {
   SkDynamicMemoryWStream stream;
   PngPixelSerializer serializer;
   picture->serialize(&stream, &serializer);
-  sk_sp<SkData> picture_data(stream.snapshotAsData());
+  sk_sp<SkData> picture_data(stream.detachAsData());
 
   Dart_CObject c_object;
   c_object.type = Dart_CObject_kTypedData;

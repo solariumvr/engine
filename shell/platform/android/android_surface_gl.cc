@@ -3,8 +3,11 @@
 // found in the LICENSE file.
 
 #include "flutter/shell/platform/android/android_surface_gl.h"
+
 #include <utility>
-#include "base/logging.h"
+
+#include "flutter/common/threads.h"
+#include "lib/ftl/logging.h"
 #include "lib/ftl/memory/ref_ptr.h"
 
 namespace shell {
@@ -46,17 +49,63 @@ AndroidSurfaceGL::AndroidSurfaceGL(
   offscreen_context_ = GlobalResourceLoadingContext(offscreen_config);
 
   if (!offscreen_context_ || !offscreen_context_->IsValid()) {
-    LOG(ERROR) << "Unable to create an offscreen EGL context";
-    LOG(ERROR) << "If you are running in an Android emulator, make sure that OpenGL is enabled";
     offscreen_context_ = nullptr;
   }
 }
 
 AndroidSurfaceGL::~AndroidSurfaceGL() = default;
 
-bool AndroidSurfaceGL::SetNativeWindowForOnScreenContext(
-    AndroidNativeWindow window,
-    PlatformView::SurfaceConfig onscreen_config) {
+bool AndroidSurfaceGL::IsOffscreenContextValid() const {
+  return offscreen_context_ && offscreen_context_->IsValid();
+}
+
+void AndroidSurfaceGL::TeardownOnScreenContext() {
+  ftl::AutoResetWaitableEvent latch;
+  blink::Threads::Gpu()->PostTask([this, &latch]() {
+    if (IsValid()) {
+      GLContextClearCurrent();
+    }
+    latch.Signal();
+  });
+  latch.Wait();
+  onscreen_context_ = nullptr;
+}
+
+bool AndroidSurfaceGL::IsValid() const {
+  if (!onscreen_context_ || !offscreen_context_) {
+    return false;
+  }
+
+  return onscreen_context_->IsValid() && offscreen_context_->IsValid();
+}
+
+std::unique_ptr<Surface> AndroidSurfaceGL::CreateGPUSurface() {
+  auto surface = std::make_unique<GPUSurfaceGL>(this);
+
+  if (!surface->Setup()) {
+    return nullptr;
+  }
+
+  return surface;
+}
+
+SkISize AndroidSurfaceGL::OnScreenSurfaceSize() const {
+  FTL_DCHECK(onscreen_context_ && onscreen_context_->IsValid());
+  return onscreen_context_->GetSize();
+}
+
+bool AndroidSurfaceGL::OnScreenSurfaceResize(const SkISize& size) const {
+  FTL_DCHECK(onscreen_context_ && onscreen_context_->IsValid());
+  return onscreen_context_->Resize(size);
+}
+
+bool AndroidSurfaceGL::ResourceContextMakeCurrent() {
+  FTL_DCHECK(offscreen_context_ && offscreen_context_->IsValid());
+  return offscreen_context_->MakeCurrent();
+}
+
+bool AndroidSurfaceGL::SetNativeWindow(ftl::RefPtr<AndroidNativeWindow> window,
+                                       PlatformView::SurfaceConfig config) {
   // In any case, we want to get rid of our current onscreen context.
   onscreen_context_ = nullptr;
 
@@ -68,7 +117,7 @@ bool AndroidSurfaceGL::SetNativeWindowForOnScreenContext(
 
   // Create the onscreen context.
   onscreen_context_ = ftl::MakeRefCounted<AndroidContextGL>(
-      offscreen_context_->Environment(), std::move(window), onscreen_config,
+      offscreen_context_->Environment(), std::move(window), config,
       offscreen_context_.get() /* sharegroup */);
 
   if (!onscreen_context_->IsValid()) {
@@ -79,46 +128,23 @@ bool AndroidSurfaceGL::SetNativeWindowForOnScreenContext(
   return true;
 }
 
-bool AndroidSurfaceGL::IsValid() const {
-  if (!onscreen_context_ || !offscreen_context_) {
-    return false;
-  }
-
-  return onscreen_context_->IsValid() && offscreen_context_->IsValid();
-}
-
-SkISize AndroidSurfaceGL::OnScreenSurfaceSize() const {
-  DCHECK(onscreen_context_ && onscreen_context_->IsValid());
-  return onscreen_context_->GetSize();
-}
-
-bool AndroidSurfaceGL::OnScreenSurfaceResize(const SkISize& size) const {
-  DCHECK(onscreen_context_ && onscreen_context_->IsValid());
-  return onscreen_context_->Resize(size);
-}
-
-bool AndroidSurfaceGL::GLOffscreenContextMakeCurrent() {
-  DCHECK(offscreen_context_ && offscreen_context_->IsValid());
-  return offscreen_context_->MakeCurrent();
-}
-
 bool AndroidSurfaceGL::GLContextMakeCurrent() {
-  DCHECK(onscreen_context_ && onscreen_context_->IsValid());
+  FTL_DCHECK(onscreen_context_ && onscreen_context_->IsValid());
   return onscreen_context_->MakeCurrent();
 }
 
 bool AndroidSurfaceGL::GLContextClearCurrent() {
-  DCHECK(onscreen_context_ && onscreen_context_->IsValid());
+  FTL_DCHECK(onscreen_context_ && onscreen_context_->IsValid());
   return onscreen_context_->ClearCurrent();
 }
 
 bool AndroidSurfaceGL::GLContextPresent() {
-  DCHECK(onscreen_context_ && onscreen_context_->IsValid());
+  FTL_DCHECK(onscreen_context_ && onscreen_context_->IsValid());
   return onscreen_context_->SwapBuffers();
 }
 
 intptr_t AndroidSurfaceGL::GLContextFBO() const {
-  DCHECK(onscreen_context_ && onscreen_context_->IsValid());
+  FTL_DCHECK(onscreen_context_ && onscreen_context_->IsValid());
   // The default window bound framebuffer on Android.
   return 0;
 }

@@ -8,33 +8,40 @@
 #include <memory>
 
 #include "lib/ftl/compiler_specific.h"
-#include "base/macros.h"
+#include "lib/ftl/macros.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 
 namespace shell {
 
+/// Represents a Frame that has been fully configured for the underlying client
+/// rendering API. A frame may only be sumitted once.
 class SurfaceFrame {
  public:
-  SurfaceFrame();
+  using SubmitCallback =
+      std::function<bool(const SurfaceFrame& surface_frame, SkCanvas* canvas)>;
 
-  virtual ~SurfaceFrame();
+  SurfaceFrame(sk_sp<SkSurface> surface, SubmitCallback submit_callback);
+
+  ~SurfaceFrame();
 
   bool Submit();
 
-  virtual SkCanvas* SkiaCanvas() = 0;
+  SkCanvas* SkiaCanvas();
+
+  sk_sp<SkSurface> SkiaSurface() const;
 
  private:
   bool submitted_;
+  sk_sp<SkSurface> surface_;
+  SubmitCallback submit_callback_;
 
-  virtual bool PerformSubmit() = 0;
+  bool PerformSubmit();
 
-  DISALLOW_COPY_AND_ASSIGN(SurfaceFrame);
+  FTL_DISALLOW_COPY_AND_ASSIGN(SurfaceFrame);
 };
 
 class Surface {
  public:
-  Surface();
-
   virtual ~Surface();
 
   virtual bool Setup() = 0;
@@ -44,9 +51,6 @@ class Surface {
   virtual std::unique_ptr<SurfaceFrame> AcquireFrame(const SkISize& size) = 0;
 
   virtual GrContext* GetContext() = 0;
-
- private:
-  DISALLOW_COPY_AND_ASSIGN(Surface);
 };
 
 }  // namespace shell

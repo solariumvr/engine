@@ -36,6 +36,14 @@ def to_command_line(gn_args):
         return '%s="%s"' % (key, value)
     return [merge(x, y) for x, y in gn_args.iteritems()]
 
+def cpu_for_target_arch(arch):
+  if arch in ['ia32', 'arm', 'armv6', 'armv5te', 'mips',
+              'simarm', 'simarmv6', 'simarmv5te', 'simmips', 'simdbc',
+              'armsimdbc']:
+    return 'x86'
+  if arch in ['x64', 'arm64', 'simarm64', 'simdbc64', 'armsimdbc64']:
+    return 'x64'
+
 def to_gn_args(args):
     if args.simulator:
         if args.target_os == 'android':
@@ -43,6 +51,9 @@ def to_gn_args(args):
         elif args.target_os == 'ios':
             if args.runtime_mode != 'debug':
                 raise Exception('iOS simulator only supports the debug runtime mode')
+
+    if args.target_os != 'android' and args.enable_vulkan:
+      raise Exception('--enable-vulkan is only supported on Android')
 
     gn_args = {}
 
@@ -54,9 +65,7 @@ def to_gn_args(args):
 
     gn_args['is_debug'] = args.unoptimized
     gn_args['android_full_debug'] = args.target_os == 'android' and args.unoptimized
-    gn_args['is_clang'] = True
-
-    ios_target_cpu = 'arm64'
+    gn_args['is_clang'] = not sys.platform.startswith(('cygwin', 'win'))
 
     aot = args.runtime_mode != 'debug'
     if args.target_os == 'android':
@@ -66,7 +75,6 @@ def to_gn_args(args):
         gn_args['ios_deployment_target'] = '7.0'
         gn_args['use_ios_simulator'] = args.simulator
         if not args.simulator:
-          # Always use AOT on iOS devices until the interpreter stabilizes
           aot = True
     else:
       gn_args['use_system_harfbuzz'] = False
@@ -88,6 +96,13 @@ def to_gn_args(args):
     gn_args['flutter_aot'] = aot
     if aot:
         gn_args['dart_target_arch'] = gn_args['target_cpu']
+
+    # No cross-compilation on Windows (for now).
+    if sys.platform.startswith(('cygwin', 'win')):
+      if 'target_os' in gn_args:
+        gn_args['target_os'] = 'win'
+      if 'target_cpu' in gn_args:
+        gn_args['target_cpu'] = cpu_for_target_arch(gn_args['target_cpu'])
 
     # On iOS Devices, use the Dart bytecode interpreter so we don't incur
     # snapshotting and linking costs of the precompiler during development.
@@ -117,6 +132,14 @@ def to_gn_args(args):
 
     gn_args['use_glfw'] = args.use_glfw
 
+    if args.enable_vulkan:
+      # Enable vulkan in the Flutter shell.
+      gn_args['shell_enable_vulkan'] = True
+      # Configure Skia for Vulkan support.
+      gn_args['skia_use_vulkan'] = True
+      gn_args['skia_link_with_vulkan'] = False
+      gn_args['skia_vulkan_headers_path'] = '//third_party/vulkan/src'
+
     return gn_args
 
 def parse_args(args):
@@ -143,6 +166,7 @@ def parse_args(args):
   parser.add_argument('--toolchain-prefix', type=str)
 
   parser.add_argument('--use-glfw', action='store_true', default=False)
+  parser.add_argument('--enable-vulkan', action='store_true', default=False)
 
   return parser.parse_args(args)
 
@@ -161,8 +185,13 @@ def main(argv):
   command = [
     '%s/buildtools/%s/gn' % (SRC_ROOT, subdir),
     'gen',
-    '--check'
+    '--check',
   ]
+
+  if sys.platform == 'darwin':
+    # On the Mac, also generate Xcode projects for ease of editing.
+    command.append('--ide=xcode')
+
   gn_args = to_command_line(to_gn_args(args))
   out_dir = get_out_dir(args)
   print "gn gen --check in %s" % out_dir
@@ -173,7 +202,7 @@ def main(argv):
   if gn_call_result == 0:
     # Generate/Replace the compile commands database in out.
     compile_cmd_gen_cmd = [
-      '%s/buildtools/%s/ninja' % (SRC_ROOT, subdir),
+      'ninja',
       '-C',
       out_dir,
       '-t',

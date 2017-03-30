@@ -10,6 +10,7 @@
 #include "flutter/lib/ui/window/window.h"
 #include "flutter/runtime/dart_controller.h"
 #include "flutter/runtime/runtime_delegate.h"
+#include "lib/tonic/dart_message_handler.h"
 
 using tonic::DartState;
 
@@ -135,6 +136,29 @@ std::string RuntimeController::GetIsolateName() {
     return "";
   }
   return dart_controller_->dart_state()->debug_name();
+}
+
+bool RuntimeController::HasLivePorts() {
+  if (!dart_controller_) {
+    return false;
+  }
+  UIDartState* dart_state = dart_controller_->dart_state();
+  if (!dart_state) {
+    return false;
+  }
+  DartState::Scope scope(dart_state);
+  return Dart_HasLivePorts();
+}
+
+tonic::DartErrorHandleType RuntimeController::GetLastError() {
+  if (!dart_controller_) {
+    return tonic::kNoError;
+  }
+  UIDartState* dart_state = dart_controller_->dart_state();
+  if (!dart_state) {
+    return tonic::kNoError;
+  }
+  return dart_state->message_handler().isolate_last_error();
 }
 
 }  // namespace blink

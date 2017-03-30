@@ -16,18 +16,24 @@ struct Settings {
   bool enable_observatory = false;
   // Port on target will be auto selected by the OS. A message will be printed
   // on the target with the port after it has been selected.
-  uint32_t observatory_port = 8080;
+  uint32_t observatory_port = 0;
+  bool enable_diagnostic = false;
+  uint32_t diagnostic_port = 0;
   bool start_paused = false;
   bool trace_startup = false;
   bool endless_trace_buffer = false;
   bool enable_dart_profiling = false;
+  bool use_test_fonts = false;
+  bool dart_non_checked_mode = false;
   std::string aot_snapshot_path;
-  std::string aot_isolate_snapshot_file_name;
-  std::string aot_vm_isolate_snapshot_file_name;
-  std::string aot_instructions_blob_file_name;
-  std::string aot_rodata_blob_file_name;
+  std::string aot_vm_snapshot_data_filename;
+  std::string aot_vm_snapshot_instr_filename;
+  std::string aot_isolate_snapshot_data_filename;
+  std::string aot_isolate_snapshot_instr_filename;
+  std::string application_library_path;
   std::string temp_directory_path;
   std::vector<std::string> dart_flags;
+  std::string log_tag = "flutter";
 
   static const Settings& Get();
   static void Set(const Settings& settings);

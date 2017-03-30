@@ -7,26 +7,25 @@
 
 #include <memory>
 
-#include "base/mac/scoped_nsobject.h"
 #include "flutter/shell/common/platform_view.h"
-#include "flutter/shell/gpu/gpu_surface_gl.h"
 #include "flutter/shell/platform/darwin/ios/framework/Source/accessibility_bridge.h"
 #include "flutter/shell/platform/darwin/ios/framework/Source/platform_message_router.h"
-#include "base/macros.h"
-#include "base/memory/weak_ptr.h"
+#include "flutter/shell/platform/darwin/ios/ios_surface.h"
+#include "lib/ftl/macros.h"
+#include "lib/ftl/memory/weak_ptr.h"
 
-@class CAEAGLLayer;
+@class CALayer;
 @class UIView;
 
 namespace shell {
 
-class IOSGLContext;
-
-class PlatformViewIOS : public PlatformView, public GPUSurfaceGLDelegate {
+class PlatformViewIOS : public PlatformView {
  public:
-  explicit PlatformViewIOS(CAEAGLLayer* layer);
+  explicit PlatformViewIOS(CALayer* layer);
 
   ~PlatformViewIOS() override;
+
+  void NotifyCreated();
 
   void ToggleAccessibility(UIView* view, bool enabled);
 
@@ -34,21 +33,13 @@ class PlatformViewIOS : public PlatformView, public GPUSurfaceGLDelegate {
     return platform_message_router_;
   }
 
-  base::WeakPtr<PlatformViewIOS> GetWeakPtr();
+  ftl::WeakPtr<PlatformViewIOS> GetWeakPtr();
 
   void UpdateSurfaceSize();
 
   VsyncWaiter* GetVsyncWaiter() override;
 
   bool ResourceContextMakeCurrent() override;
-
-  bool GLContextMakeCurrent() override;
-
-  bool GLContextClearCurrent() override;
-
-  bool GLContextPresent() override;
-
-  intptr_t GLContextFBO() const override;
 
   void HandlePlatformMessage(
       ftl::RefPtr<blink::PlatformMessage> message) override;
@@ -60,16 +51,16 @@ class PlatformViewIOS : public PlatformView, public GPUSurfaceGLDelegate {
                      const std::string& packages) override;
 
  private:
-  std::unique_ptr<IOSGLContext> context_;
+  std::unique_ptr<IOSSurface> ios_surface_;
   PlatformMessageRouter platform_message_router_;
   std::unique_ptr<AccessibilityBridge> accessibility_bridge_;
-  base::WeakPtrFactory<PlatformViewIOS> weak_factory_;
+  ftl::WeakPtrFactory<PlatformViewIOS> weak_factory_;
 
   void SetupAndLoadFromSource(const std::string& assets_directory,
                               const std::string& main,
                               const std::string& packages);
 
-  DISALLOW_COPY_AND_ASSIGN(PlatformViewIOS);
+  FTL_DISALLOW_COPY_AND_ASSIGN(PlatformViewIOS);
 };
 
 }  // namespace shell

@@ -11,8 +11,8 @@
 #include "flutter/runtime/runtime_controller.h"
 #include "flutter/runtime/runtime_delegate.h"
 #include "flutter/shell/common/rasterizer.h"
-#include "base/macros.h"
-#include "base/memory/weak_ptr.h"
+#include "lib/ftl/macros.h"
+#include "lib/ftl/memory/weak_ptr.h"
 #include "third_party/skia/include/core/SkPicture.h"
 
 namespace blink {
@@ -31,7 +31,7 @@ class Engine : public blink::RuntimeDelegate {
 
   ~Engine() override;
 
-  base::WeakPtr<Engine> GetWeakPtr();
+  ftl::WeakPtr<Engine> GetWeakPtr();
 
   static void Init();
 
@@ -56,8 +56,10 @@ class Engine : public blink::RuntimeDelegate {
                      const std::string& bundle);
 
   Dart_Port GetUIIsolateMainPort();
-
   std::string GetUIIsolateName();
+  bool UIIsolateHasLivePorts();
+  tonic::DartErrorHandleType GetUIIsolateLastError();
+  tonic::DartErrorHandleType GetLoadScriptError();
 
   void OnOutputSurfaceCreated(const ftl::Closure& gpu_continuation);
   void OnOutputSurfaceDestroyed(const ftl::Closure& gpu_continuation);
@@ -92,27 +94,24 @@ class Engine : public blink::RuntimeDelegate {
   void HandleAssetPlatformMessage(ftl::RefPtr<blink::PlatformMessage> message);
   bool GetAssetAsBuffer(const std::string& name, std::vector<uint8_t>* data);
 
-  base::WeakPtr<PlatformView> platform_view_;
+  ftl::WeakPtr<PlatformView> platform_view_;
   std::unique_ptr<Animator> animator_;
   std::unique_ptr<blink::RuntimeController> runtime_;
-
+  tonic::DartErrorHandleType load_script_error_;
   ftl::RefPtr<blink::PlatformMessage> pending_push_route_message_;
   blink::ViewportMetrics viewport_metrics_;
   std::string language_code_;
   std::string country_code_;
   bool semantics_enabled_ = false;
-
   // TODO(abarth): Unify these two behind a common interface.
   ftl::RefPtr<blink::ZipAssetStore> asset_store_;
   std::unique_ptr<blink::DirectoryAssetBundle> directory_asset_bundle_;
-
   // TODO(eseidel): This should move into an AnimatorStateMachine.
   bool activity_running_;
   bool have_surface_;
+  ftl::WeakPtrFactory<Engine> weak_factory_;
 
-  base::WeakPtrFactory<Engine> weak_factory_;
-
-  DISALLOW_COPY_AND_ASSIGN(Engine);
+  FTL_DISALLOW_COPY_AND_ASSIGN(Engine);
 };
 
 }  // namespace shell

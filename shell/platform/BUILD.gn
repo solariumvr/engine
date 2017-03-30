@@ -4,11 +4,19 @@
 
 group("platform") {
   if (is_mac || is_ios) {
-    deps = [ "darwin" ]
+    deps = [
+      "darwin",
+    ]
   } else if (is_android) {
-    deps = [ "android" ]
+    deps = [
+      "android",
+    ]
   } else if (is_linux) {
-    deps = [ "linux" ]
+    deps = [
+      "linux",
+    ]
+  } else if (is_win) {
+    print("Shell currently not supported on Windows.")
   } else {
     assert(false, "Unknown/Unsupported platform.")
   }

@@ -9,7 +9,8 @@
 
 namespace shell {
 
-void PlatformMacMain(int argc, const char* argv[], std::string icu_data_path);
+void PlatformMacMain(std::string icu_data_path,
+                     std::string application_library_path);
 
 bool AttemptLaunchFromCommandLineSwitches(Engine* engine);
 

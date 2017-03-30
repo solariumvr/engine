@@ -4,18 +4,20 @@
 
 #include "flutter/shell/platform/darwin/ios/framework/Source/FlutterDartProject_Internal.h"
 
-#include "base/command_line.h"
 #include "dart/runtime/include/dart_api.h"
 #include "flutter/common/threads.h"
+#include "flutter/shell/common/shell.h"
 #include "flutter/shell/common/switches.h"
 #include "flutter/shell/platform/darwin/ios/framework/Source/FlutterDartSource.h"
+#include "flutter/shell/platform/darwin/ios/framework/Source/flutter_main_ios.h"
 
 static NSURL* URLForSwitch(const char* name) {
-  auto cmd = *base::CommandLine::ForCurrentProcess();
+  const auto& cmd = shell::Shell::Shared().GetCommandLine();
   NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
 
-  if (cmd.HasSwitch(name)) {
-    auto url = [NSURL fileURLWithPath:@(cmd.GetSwitchValueASCII(name).c_str())];
+  std::string switch_value;
+  if (cmd.GetOptionValue(name, &switch_value)) {
+    auto url = [NSURL fileURLWithPath:@(switch_value.c_str())];
     [defaults setURL:url forKey:@(name)];
     [defaults synchronize];
     return url;
@@ -29,6 +31,12 @@ static NSURL* URLForSwitch(const char* name) {
   FlutterDartSource* _dartSource;
 
   VMType _vmTypeRequirement;
+}
+
++ (void)initialize {
+  if (self == [FlutterDartProject class]) {
+    shell::FlutterMain();
+  }
 }
 
 #pragma mark - Override base class designated initializers
@@ -97,9 +105,16 @@ static NSURL* URLForSwitch(const char* name) {
     if (flxURL == nil) {
       // If the URL was not specified on the command line, look inside the
       // FlutterApplication bundle.
-      flxURL =
-          [NSURL fileURLWithPath:[bundle pathForResource:@"app" ofType:@"flx"]
-                     isDirectory:NO];
+      NSString* flxPath = [self pathForFLXFromBundle:bundle];
+      if (flxPath != nil) {
+        flxURL = [NSURL fileURLWithPath:flxPath isDirectory:NO];
+      }
+    }
+
+    if (flxURL == nil) {
+      NSLog(@"Error: FLX file not present in bundle; unable to start app.");
+      [self release];
+      return nil;
     }
 
     NSURL* dartMainURL =
@@ -129,6 +144,16 @@ static NSURL* URLForSwitch(const char* name) {
     _vmTypeRequirement = VMTypeInterpreter;
     return;
   }
+}
+
+- (NSString*)pathForFLXFromBundle:(NSBundle*)bundle {
+  NSString* flxName = [bundle objectForInfoDictionaryKey:@"FLTFlxName"];
+  if (flxName == nil) {
+    // Default to "app.flx"
+    flxName = @"app";
+  }
+
+  return [bundle pathForResource:flxName ofType:@"flx"];
 }
 
 #pragma mark - Launching the project in a preconfigured engine.
@@ -198,9 +223,7 @@ static NSString* NSStringFromVMType(VMType type) {
     return;
   }
 
-  NSString* path =
-      [_precompiledDartBundle pathForResource:@"app" ofType:@"flx"];
-
+  NSString* path = [self pathForFLXFromBundle:_precompiledDartBundle];
   if (path.length == 0) {
     NSString* message =
         [NSString stringWithFormat:@"Could not find the 'app.flx' archive in "

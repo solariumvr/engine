@@ -10,11 +10,13 @@
 #include "flutter/lib/ui/painting/picture.h"
 #include "flutter/lib/ui/painting/picture_recorder.h"
 #include "flutter/lib/ui/painting/rrect.h"
+#include "flutter/lib/ui/painting/vertices.h"
 #include "lib/tonic/dart_wrappable.h"
 #include "lib/tonic/typed_data/float32_list.h"
 #include "lib/tonic/typed_data/float64_list.h"
 #include "lib/tonic/typed_data/int32_list.h"
 #include "third_party/skia/include/core/SkCanvas.h"
+#include "third_party/skia/include/utils/SkShadowUtils.h"
 
 namespace tonic {
 class DartLibraryNatives;
@@ -53,7 +55,6 @@ class Canvas : public ftl::RefCountedThreadSafe<Canvas>,
   void rotate(double radians);
   void skew(double sx, double sy);
   void transform(const tonic::Float64List& matrix4);
-  void setMatrix(const tonic::Float64List& matrix4);
 
   void clipRect(double left, double top, double right, double bottom);
   void clipRRect(const RRect& rrect);
@@ -142,14 +143,10 @@ class Canvas : public ftl::RefCountedThreadSafe<Canvas>,
                   SkCanvas::PointMode point_mode,
                   const tonic::Float32List& points);
 
-  void drawVertices(const Paint& paint,
-                    const PaintData& paint_data,
-                    SkCanvas::VertexMode vertex_mode,
-                    const tonic::Float32List& vertices,
-                    const tonic::Float32List& texture_coordinates,
-                    const tonic::Int32List& colors,
+  void drawVertices(const Vertices* vertices,
                     SkBlendMode blend_mode,
-                    const tonic::Int32List& indices);
+                    const Paint& paint,
+                    const PaintData& paint_data);
 
   void drawAtlas(const Paint& paint,
                  const PaintData& paint_data,
@@ -159,6 +156,11 @@ class Canvas : public ftl::RefCountedThreadSafe<Canvas>,
                  const tonic::Int32List& colors,
                  SkBlendMode blend_mode,
                  const tonic::Float32List& cull_rect);
+
+  void drawShadow(const CanvasPath* path,
+                  SkColor color,
+                  int elevation,
+                  bool transparentOccluder);
 
   SkCanvas* canvas() const { return canvas_; }
   void Clear();

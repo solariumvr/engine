@@ -5,15 +5,16 @@
 package io.flutter.view;
 
 import android.content.Context;
-import android.util.Log;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
+
+import io.flutter.util.PathUtils;
+
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,52 +22,41 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
-
-import org.chromium.base.JNINamespace;
-import org.chromium.base.PathUtils;
-import org.chromium.base.library_loader.LibraryLoader;
-import org.chromium.base.library_loader.LibraryProcessType;
-import org.chromium.base.library_loader.ProcessInitException;
 
 /**
  * A class to intialize the Flutter engine.
  */
-@JNINamespace("shell")
 public class FlutterMain {
     private static final String TAG = "FlutterMain";
 
     // Must match values in sky::shell::switches
     private static final String AOT_SNAPSHOT_PATH_KEY = "aot-snapshot-path";
-    private static final String AOT_ISOLATE_KEY = "isolate-snapshot";
-    private static final String AOT_VM_ISOLATE_KEY = "vm-isolate-snapshot";
-    private static final String AOT_INSTRUCTIONS_KEY = "instructions-blob";
-    private static final String AOT_RODATA_KEY = "rodata-blob";
+    private static final String AOT_VM_SNAPSHOT_DATA_KEY = "vm-snapshot-data";
+    private static final String AOT_VM_SNAPSHOT_INSTR_KEY = "vm-snapshot-instr";
+    private static final String AOT_ISOLATE_SNAPSHOT_DATA_KEY = "isolate-snapshot-data";
+    private static final String AOT_ISOLATE_SNAPSHOT_INSTR_KEY = "isolate-snapshot-instr";
     private static final String FLX_KEY = "flx";
 
     // XML Attribute keys supported in AndroidManifest.xml
-    public static final String PUBLIC_AOT_ISOLATE_KEY =
-        FlutterMain.class.getName() + '.' + AOT_ISOLATE_KEY;
-    public static final String PUBLIC_AOT_VM_ISOLATE_KEY =
-        FlutterMain.class.getName() + '.' + AOT_VM_ISOLATE_KEY;
-    public static final String PUBLIC_AOT_INSTRUCTIONS_KEY =
-        FlutterMain.class.getName() + '.' + AOT_INSTRUCTIONS_KEY;
-    public static final String PUBLIC_AOT_RODATA_KEY =
-        FlutterMain.class.getName() + '.' + AOT_RODATA_KEY;
+    public static final String PUBLIC_AOT_VM_SNAPSHOT_DATA_KEY =
+        FlutterMain.class.getName() + '.' + AOT_VM_SNAPSHOT_DATA_KEY;
+    public static final String PUBLIC_AOT_VM_SNAPSHOT_INSTR_KEY =
+        FlutterMain.class.getName() + '.' + AOT_VM_SNAPSHOT_INSTR_KEY;
+    public static final String PUBLIC_AOT_ISOLATE_SNAPSHOT_DATA_KEY =
+        FlutterMain.class.getName() + '.' + AOT_ISOLATE_SNAPSHOT_DATA_KEY;
+    public static final String PUBLIC_AOT_ISOLATE_SNAPSHOT_INSTR_KEY =
+        FlutterMain.class.getName() + '.' + AOT_ISOLATE_SNAPSHOT_INSTR_KEY;
     public static final String PUBLIC_FLX_KEY =
         FlutterMain.class.getName() + '.' + FLX_KEY;
 
     // Resource names used for components of the precompiled snapshot.
-    private static final String DEFAULT_AOT_ISOLATE = "snapshot_aot_isolate";
-    private static final String DEFAULT_AOT_VM_ISOLATE = "snapshot_aot_vmisolate";
-    private static final String DEFAULT_AOT_INSTRUCTIONS = "snapshot_aot_instr";
-    private static final String DEFAULT_AOT_RODATA = "snapshot_aot_rodata";
+    private static final String DEFAULT_AOT_VM_SNAPSHOT_DATA = "vm_snapshot_data";
+    private static final String DEFAULT_AOT_VM_SNAPSHOT_INSTR = "vm_snapshot_instr";
+    private static final String DEFAULT_AOT_ISOLATE_SNAPSHOT_DATA = "isolate_snapshot_data";
+    private static final String DEFAULT_AOT_ISOLATE_SNAPSHOT_INSTR = "isolate_snapshot_instr";
     private static final String DEFAULT_FLX = "app.flx";
 
     private static final String MANIFEST = "flutter.yaml";
-    private static final String PRIVATE_DATA_DIRECTORY_SUFFIX = "sky_shell";
 
     private static final Set<String> SKY_RESOURCES = ImmutableSetBuilder.<String>newInstance()
         .add("icudtl.dat")
@@ -74,15 +64,16 @@ public class FlutterMain {
         .build();
 
     // Mutable because default values can be overridden via config properties
-    private static String sAotIsolate = DEFAULT_AOT_ISOLATE;
-    private static String sAotVmIsolate = DEFAULT_AOT_VM_ISOLATE;
-    private static String sAotInstructions = DEFAULT_AOT_INSTRUCTIONS;
-    private static String sAotRodata = DEFAULT_AOT_RODATA;
+    private static String sAotVmSnapshotData = DEFAULT_AOT_VM_SNAPSHOT_DATA;
+    private static String sAotVmSnapshotInstr = DEFAULT_AOT_VM_SNAPSHOT_INSTR;
+    private static String sAotIsolateSnapshotData = DEFAULT_AOT_ISOLATE_SNAPSHOT_DATA;
+    private static String sAotIsolateSnapshotInstr = DEFAULT_AOT_ISOLATE_SNAPSHOT_INSTR;
     private static String sFlx = DEFAULT_FLX;
 
     private static boolean sInitialized = false;
     private static ResourceExtractor sResourceExtractor;
     private static boolean sIsPrecompiled;
+    private static Settings sSettings;
 
     private static final class ImmutableSetBuilder<T> {
         static <T> ImmutableSetBuilder<T> newInstance() {
@@ -111,15 +102,42 @@ public class FlutterMain {
         }
     }
 
+    public static class Settings {
+        private String logTag;
+
+        public String getLogTag() {
+            return logTag;
+        }
+
+        /**
+         * Set the tag associated with Flutter app log messages.
+         * @param tag Log tag.
+         */
+        public void setLogTag(String tag) {
+            logTag = tag;
+        }
+    }
+
     /**
      * Starts initialization of the native system.
+     * @param applicationContext The Android application context.
      */
     public static void startInitialization(Context applicationContext) {
+        startInitialization(applicationContext, new Settings());
+    }
+
+    /**
+     * Starts initialization of the native system.
+     * @param applicationContext The Android application context.
+     * @param settings Configuration settings.
+     */
+    public static void startInitialization(Context applicationContext, Settings settings) {
+        sSettings = settings;
+
         long initStartTimestampMillis = SystemClock.uptimeMillis();
         initConfig(applicationContext);
-        initJavaUtils(applicationContext);
         initResources(applicationContext);
-        initNative(applicationContext);
+        System.loadLibrary("flutter");
         initAot(applicationContext);
 
         // We record the initialization time using SystemClock because at the start of the
@@ -133,6 +151,8 @@ public class FlutterMain {
 
     /**
      * Blocks until initialization of the native system has completed.
+     * @param applicationContext The Android application context.
+     * @param args Flags sent to the Flutter runtime.
      */
     public static void ensureInitializationComplete(Context applicationContext, String[] args) {
         if (sInitialized) {
@@ -142,19 +162,25 @@ public class FlutterMain {
             sResourceExtractor.waitForCompletion();
 
             List<String> shellArgs = new ArrayList<>();
+            shellArgs.add("--icu-data-file-path=" +
+                new File(PathUtils.getDataDirectory(applicationContext), "icudtl.dat"));
             if (args != null) {
                 Collections.addAll(shellArgs, args);
             }
             if (sIsPrecompiled) {
                 shellArgs.add("--" + AOT_SNAPSHOT_PATH_KEY + "=" +
                     PathUtils.getDataDirectory(applicationContext));
-                shellArgs.add("--" + AOT_ISOLATE_KEY + "=" + sAotIsolate);
-                shellArgs.add("--" + AOT_VM_ISOLATE_KEY + "=" + sAotVmIsolate);
-                shellArgs.add("--" + AOT_INSTRUCTIONS_KEY + "=" + sAotInstructions);
-                shellArgs.add("--" + AOT_RODATA_KEY + "=" + sAotRodata);
+                shellArgs.add("--" + AOT_VM_SNAPSHOT_DATA_KEY + "=" + sAotVmSnapshotData);
+                shellArgs.add("--" + AOT_VM_SNAPSHOT_INSTR_KEY + "=" + sAotVmSnapshotInstr);
+                shellArgs.add("--" + AOT_ISOLATE_SNAPSHOT_DATA_KEY + "=" + sAotIsolateSnapshotData);
+                shellArgs.add("--" + AOT_ISOLATE_SNAPSHOT_INSTR_KEY + "=" + sAotIsolateSnapshotInstr);
             } else {
                 shellArgs.add("--cache-dir-path=" +
                     PathUtils.getCacheDirectory(applicationContext));
+            }
+
+            if (sSettings.getLogTag() != null) {
+                shellArgs.add("--log-tag=" + sSettings.getLogTag());
             }
 
             nativeInit(applicationContext, shellArgs.toArray(new String[0]));
@@ -178,12 +204,10 @@ public class FlutterMain {
             Bundle metadata = applicationContext.getPackageManager().getApplicationInfo(
                 applicationContext.getPackageName(), PackageManager.GET_META_DATA).metaData;
             if (metadata != null) {
-                sAotIsolate = metadata.getString(PUBLIC_AOT_ISOLATE_KEY, DEFAULT_AOT_ISOLATE);
-                sAotVmIsolate = metadata.getString(PUBLIC_AOT_VM_ISOLATE_KEY,
-                    DEFAULT_AOT_VM_ISOLATE);
-                sAotInstructions = metadata.getString(PUBLIC_AOT_INSTRUCTIONS_KEY,
-                    DEFAULT_AOT_INSTRUCTIONS);
-                sAotRodata = metadata.getString(PUBLIC_AOT_RODATA_KEY, DEFAULT_AOT_RODATA);
+                sAotVmSnapshotData = metadata.getString(PUBLIC_AOT_VM_SNAPSHOT_DATA_KEY, DEFAULT_AOT_VM_SNAPSHOT_DATA);
+                sAotVmSnapshotInstr = metadata.getString(PUBLIC_AOT_VM_SNAPSHOT_INSTR_KEY, DEFAULT_AOT_VM_SNAPSHOT_INSTR);
+                sAotIsolateSnapshotData = metadata.getString(PUBLIC_AOT_ISOLATE_SNAPSHOT_DATA_KEY, DEFAULT_AOT_ISOLATE_SNAPSHOT_DATA);
+                sAotIsolateSnapshotInstr = metadata.getString(PUBLIC_AOT_ISOLATE_SNAPSHOT_INSTR_KEY, DEFAULT_AOT_ISOLATE_SNAPSHOT_INSTR);
                 sFlx = metadata.getString(PUBLIC_FLX_KEY, DEFAULT_FLX);
             }
         } catch (PackageManager.NameNotFoundException e) {
@@ -191,32 +215,17 @@ public class FlutterMain {
         }
     }
 
-    private static void initJavaUtils(Context applicationContext) {
-        PathUtils.setPrivateDataDirectorySuffix(PRIVATE_DATA_DIRECTORY_SUFFIX,
-            applicationContext);
-    }
-
     private static void initResources(Context applicationContext) {
         Context context = applicationContext;
         new ResourceCleaner(context).start();
         sResourceExtractor = new ResourceExtractor(context)
             .addResources(SKY_RESOURCES)
-            .addResource(sAotIsolate)
-            .addResource(sAotVmIsolate)
-            .addResource(sAotInstructions)
-            .addResource(sAotRodata)
+            .addResource(sAotVmSnapshotData)
+            .addResource(sAotVmSnapshotInstr)
+            .addResource(sAotIsolateSnapshotData)
+            .addResource(sAotIsolateSnapshotInstr)
             .addResource(sFlx)
             .start();
-    }
-
-    private static void initNative(Context applicationContext) {
-        try {
-            LibraryLoader.get(LibraryProcessType.PROCESS_BROWSER)
-                .ensureInitialized(applicationContext);
-        } catch (ProcessInitException e) {
-            Log.e(TAG, "Unable to load Sky Engine binary.", e);
-            throw new RuntimeException(e);
-        }
     }
 
     /**
@@ -238,10 +247,10 @@ public class FlutterMain {
     private static void initAot(Context applicationContext) {
         Set<String> assets = listRootAssets(applicationContext);
         sIsPrecompiled = assets.containsAll(Arrays.asList(
-            sAotIsolate,
-            sAotVmIsolate,
-            sAotInstructions,
-            sAotRodata
+            sAotVmSnapshotData,
+            sAotVmSnapshotInstr,
+            sAotIsolateSnapshotData,
+            sAotIsolateSnapshotInstr
         ));
     }
 

@@ -6,7 +6,7 @@
 
 #include <utility>
 
-#include "apps/modular/lib/app/connect.h"
+#include "application/lib/app/connect.h"
 #include "dart/runtime/include/dart_api.h"
 #include "flutter/assets/zip_asset_store.h"
 #include "flutter/common/threads.h"
@@ -16,7 +16,7 @@
 #include "flutter/runtime/dart_controller.h"
 #include "lib/fidl/dart/sdk_ext/src/natives.h"
 #include "lib/ftl/functional/make_copyable.h"
-#include "base/logging.h"
+#include "lib/ftl/logging.h"
 #include "lib/ftl/time/time_delta.h"
 #include "lib/tonic/mx/mx_converter.h"
 #include "lib/zip/create_unzipper.h"
@@ -30,6 +30,7 @@ using tonic::ToDart;
 namespace flutter_runner {
 namespace {
 
+constexpr char kKernelKey[] = "kernel_blob.bin";
 constexpr char kSnapshotKey[] = "snapshot_blob.bin";
 constexpr char kAssetChannel[] = "flutter/assets";
 
@@ -40,26 +41,34 @@ constexpr int kMaxPipelineDepth = 3;
 // to recover before acknowleding the invalidation and scheduling more frames.
 constexpr int kRecoveryPipelineDepth = 1;
 
-blink::PointerData::Change GetChangeFromEventType(mozart::EventType type) {
-  switch (type) {
-    case mozart::EventType::POINTER_CANCEL:
-      return blink::PointerData::Change::kCancel;
-    case mozart::EventType::POINTER_DOWN:
+blink::PointerData::Change GetChangeFromPointerEventPhase(
+    mozart::PointerEvent::Phase phase) {
+  switch (phase) {
+    case mozart::PointerEvent::Phase::ADD:
+      return blink::PointerData::Change::kAdd;
+    case mozart::PointerEvent::Phase::HOVER:
+      return blink::PointerData::Change::kHover;
+    case mozart::PointerEvent::Phase::DOWN:
       return blink::PointerData::Change::kDown;
-    case mozart::EventType::POINTER_MOVE:
+    case mozart::PointerEvent::Phase::MOVE:
       return blink::PointerData::Change::kMove;
-    case mozart::EventType::POINTER_UP:
+    case mozart::PointerEvent::Phase::UP:
       return blink::PointerData::Change::kUp;
+    case mozart::PointerEvent::Phase::REMOVE:
+      return blink::PointerData::Change::kRemove;
+    case mozart::PointerEvent::Phase::CANCEL:
+      return blink::PointerData::Change::kCancel;
     default:
       return blink::PointerData::Change::kCancel;
   }
 }
 
-blink::PointerData::DeviceKind GetKindFromEventKind(mozart::PointerKind kind) {
-  switch (kind) {
-    case mozart::PointerKind::TOUCH:
+blink::PointerData::DeviceKind GetKindFromPointerType(
+    mozart::PointerEvent::Type type) {
+  switch (type) {
+    case mozart::PointerEvent::Type::TOUCH:
       return blink::PointerData::DeviceKind::kTouch;
-    case mozart::PointerKind::MOUSE:
+    case mozart::PointerEvent::Type::MOUSE:
       return blink::PointerData::DeviceKind::kMouse;
     default:
       return blink::PointerData::DeviceKind::kTouch;
@@ -81,11 +90,12 @@ RuntimeHolder::~RuntimeHolder() {
 }
 
 void RuntimeHolder::Init(
-    fidl::InterfaceHandle<modular::ApplicationEnvironment> environment,
-    fidl::InterfaceRequest<modular::ServiceProvider> outgoing_services,
+    fidl::InterfaceHandle<app::ApplicationEnvironment> environment,
+    fidl::InterfaceRequest<app::ServiceProvider> outgoing_services,
     std::vector<char> bundle) {
-  DCHECK(!rasterizer_);
-  rasterizer_.reset(new Rasterizer());
+  FTL_DCHECK(!rasterizer_);
+  rasterizer_ = Rasterizer::Create();
+  FTL_DCHECK(rasterizer_);
 
   environment_.Bind(std::move(environment));
   environment_->GetServices(fidl::GetProxy(&environment_services_));
@@ -98,18 +108,21 @@ void RuntimeHolder::Init(
 void RuntimeHolder::CreateView(
     const std::string& script_uri,
     fidl::InterfaceRequest<mozart::ViewOwner> view_owner_request,
-    fidl::InterfaceRequest<modular::ServiceProvider> services) {
+    fidl::InterfaceRequest<app::ServiceProvider> services) {
   if (view_listener_binding_.is_bound()) {
     // TODO(jeffbrown): Refactor this to support multiple view instances
     // sharing the same underlying root bundle (but with different runtimes).
-    LOG(ERROR) << "The view has already been created.";
+    FTL_LOG(ERROR) << "The view has already been created.";
     return;
   }
 
+  std::vector<uint8_t> kernel;
   std::vector<uint8_t> snapshot;
-  if (!asset_store_->GetAsBuffer(kSnapshotKey, &snapshot)) {
-    LOG(ERROR) << "Unable to load snapshot from root bundle.";
-    return;
+  if (!asset_store_->GetAsBuffer(kKernelKey, &kernel)) {
+    if (!asset_store_->GetAsBuffer(kSnapshotKey, &snapshot)) {
+      FTL_LOG(ERROR) << "Unable to load kernel or snapshot from root bundle.";
+      return;
+    }
   }
 
   mozart::ViewListenerPtr view_listener;
@@ -118,14 +131,23 @@ void RuntimeHolder::CreateView(
                             std::move(view_owner_request),
                             std::move(view_listener), script_uri);
 
-  modular::ServiceProviderPtr view_services;
+  app::ServiceProviderPtr view_services;
   view_->GetServiceProvider(GetProxy(&view_services));
 
   // Listen for input events.
   ConnectToService(view_services.get(), GetProxy(&input_connection_));
   mozart::InputListenerPtr input_listener;
   input_listener_binding_.Bind(GetProxy(&input_listener));
-  input_connection_->SetListener(std::move(input_listener));
+  input_connection_->SetEventListener(std::move(input_listener));
+
+#if FLUTTER_ENABLE_VULKAN
+  direct_input_ = std::make_unique<DirectInput>(
+      [this](const blink::PointerDataPacket& packet) -> void {
+        runtime_->DispatchPointerDataPacket(packet);
+      });
+  FTL_DCHECK(direct_input_->IsValid());
+  direct_input_->WaitForReadAvailability();
+#endif  // FLUTTER_ENABLE_VULKAN
 
   mozart::ScenePtr scene;
   view_->CreateScene(fidl::GetProxy(&scene));
@@ -136,8 +158,28 @@ void RuntimeHolder::CreateView(
   runtime_ = blink::RuntimeController::Create(this);
   runtime_->CreateDartController(script_uri);
   runtime_->SetViewportMetrics(viewport_metrics_);
-  runtime_->dart_controller()->RunFromSnapshot(snapshot.data(),
-                                               snapshot.size());
+#if FLUTTER_ENABLE_VULKAN
+  direct_input_->SetViewportMetrics(viewport_metrics_);
+#endif  // FLUTTER_ENABLE_VULKAN
+  if (!kernel.empty()) {
+    runtime_->dart_controller()->RunFromKernel(kernel.data(), kernel.size());
+  } else {
+    runtime_->dart_controller()->RunFromSnapshot(snapshot.data(),
+                                                 snapshot.size());
+  }
+}
+
+Dart_Port RuntimeHolder::GetUIIsolateMainPort() {
+  if (!runtime_)
+    return ILLEGAL_PORT;
+  return runtime_->GetMainPort();
+}
+
+std::string RuntimeHolder::GetUIIsolateName() {
+  if (!runtime_) {
+    return "";
+  }
+  return runtime_->GetIsolateName();
 }
 
 void RuntimeHolder::ScheduleFrame() {
@@ -187,7 +229,7 @@ void RuntimeHolder::DidCreateMainIsolate(Dart_Isolate isolate) {
 }
 
 void RuntimeHolder::InitFidlInternal() {
-  fidl::InterfaceHandle<modular::ApplicationEnvironment> environment;
+  fidl::InterfaceHandle<app::ApplicationEnvironment> environment;
   environment_->Duplicate(GetProxy(&environment));
 
   Dart_Handle fidl_internal = Dart_LookupLibrary(ToDart("dart:fidl.internal"));
@@ -246,17 +288,18 @@ blink::UnzipperProvider RuntimeHolder::GetUnzipperProviderForRootBundle() {
   };
 }
 
-void RuntimeHolder::OnEvent(mozart::EventPtr event,
+void RuntimeHolder::OnEvent(mozart::InputEventPtr event,
                             const OnEventCallback& callback) {
   bool handled = false;
-  if (event->pointer_data) {
+  if (event->is_pointer()) {
+    const mozart::PointerEventPtr& pointer = event->get_pointer();
     blink::PointerData pointer_data;
-    pointer_data.time_stamp = event->time_stamp;
-    pointer_data.change = GetChangeFromEventType(event->action);
-    pointer_data.kind = GetKindFromEventKind(event->pointer_data->kind);
-    pointer_data.device = event->pointer_data->pointer_id;
-    pointer_data.physical_x = event->pointer_data->x;
-    pointer_data.physical_y = event->pointer_data->y;
+    pointer_data.time_stamp = pointer->event_time;
+    pointer_data.change = GetChangeFromPointerEventPhase(pointer->phase);
+    pointer_data.kind = GetKindFromPointerType(pointer->type);
+    pointer_data.device = pointer->pointer_id;
+    pointer_data.physical_x = pointer->x;
+    pointer_data.physical_y = pointer->y;
 
     switch (pointer_data.change) {
       case blink::PointerData::Change::kDown:
@@ -273,7 +316,7 @@ void RuntimeHolder::OnEvent(mozart::EventPtr event,
       case blink::PointerData::Change::kAdd:
       case blink::PointerData::Change::kRemove:
       case blink::PointerData::Change::kHover:
-        DCHECK(down_pointers_.count(pointer_data.device) == 0);
+        FTL_DCHECK(down_pointers_.count(pointer_data.device) == 0);
         break;
     }
 
@@ -282,11 +325,14 @@ void RuntimeHolder::OnEvent(mozart::EventPtr event,
     runtime_->DispatchPointerDataPacket(packet);
 
     handled = true;
-  } else if (event->key_data) {
+  } else if (event->is_keyboard()) {
+    const mozart::KeyboardEventPtr& keyboard = event->get_keyboard();
     const char* type = nullptr;
-    if (event->action == mozart::EventType::KEY_PRESSED)
+    if (keyboard->phase == mozart::KeyboardEvent::Phase::PRESSED)
       type = "keydown";
-    else if (event->action == mozart::EventType::KEY_RELEASED)
+    else if (keyboard->phase == mozart::KeyboardEvent::Phase::REPEAT)
+      type = "keydown";  // TODO change this to keyrepeat
+    else if (keyboard->phase == mozart::KeyboardEvent::Phase::RELEASED)
       type = "keyup";
 
     if (type) {
@@ -296,9 +342,9 @@ void RuntimeHolder::OnEvent(mozart::EventPtr event,
       document.AddMember("type", rapidjson::Value(type, strlen(type)),
                          allocator);
       document.AddMember("keymap", rapidjson::Value("fuchsia"), allocator);
-      document.AddMember("hidUsage", event->key_data->hid_usage, allocator);
-      document.AddMember("codePoint", event->key_data->code_point, allocator);
-      document.AddMember("modifiers", event->key_data->modifiers, allocator);
+      document.AddMember("hidUsage", keyboard->hid_usage, allocator);
+      document.AddMember("codePoint", keyboard->code_point, allocator);
+      document.AddMember("modifiers", keyboard->modifiers, allocator);
       rapidjson::StringBuffer buffer;
       rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
       document.Accept(writer);
@@ -317,7 +363,7 @@ void RuntimeHolder::OnEvent(mozart::EventPtr event,
 
 void RuntimeHolder::OnInvalidation(mozart::ViewInvalidationPtr invalidation,
                                    const OnInvalidationCallback& callback) {
-  DCHECK(invalidation);
+  FTL_DCHECK(invalidation);
   pending_invalidation_ = false;
 
   // Apply view property changes.
@@ -331,6 +377,11 @@ void RuntimeHolder::OnInvalidation(mozart::ViewInvalidationPtr invalidation,
     // TODO(abarth): Use view_properties_->display_metrics->device_pixel_ratio
     // once that's reasonable.
     runtime_->SetViewportMetrics(viewport_metrics_);
+#if FLUTTER_ENABLE_VULKAN
+    if (direct_input_) {
+      direct_input_->SetViewportMetrics(viewport_metrics_);
+    }
+#endif  // FLUTTER_ENABLE_VULKAN
   }
 
   // Remember the scene version for rendering.
@@ -338,7 +389,7 @@ void RuntimeHolder::OnInvalidation(mozart::ViewInvalidationPtr invalidation,
 
   // TODO(jeffbrown): Flow the frame time through the rendering pipeline.
   if (outstanding_requests_ >= kMaxPipelineDepth) {
-    DCHECK(!deferred_invalidation_callback_);
+    FTL_DCHECK(!deferred_invalidation_callback_);
     deferred_invalidation_callback_ = callback;
     return;
   }
@@ -353,16 +404,16 @@ void RuntimeHolder::OnInvalidation(mozart::ViewInvalidationPtr invalidation,
   callback();
 }
 
-base::WeakPtr<RuntimeHolder> RuntimeHolder::GetWeakPtr() {
+ftl::WeakPtr<RuntimeHolder> RuntimeHolder::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 
 void RuntimeHolder::BeginFrame() {
-  DCHECK(outstanding_requests_ > 0);
-  DCHECK(outstanding_requests_ <= kMaxPipelineDepth)
+  FTL_DCHECK(outstanding_requests_ > 0);
+  FTL_DCHECK(outstanding_requests_ <= kMaxPipelineDepth)
       << outstanding_requests_;
 
-  DCHECK(!is_ready_to_draw_);
+  FTL_DCHECK(!is_ready_to_draw_);
   is_ready_to_draw_ = true;
   runtime_->BeginFrame(ftl::TimePoint::Now());
   const bool was_ready_to_draw = is_ready_to_draw_;
@@ -376,7 +427,7 @@ void RuntimeHolder::BeginFrame() {
 }
 
 void RuntimeHolder::OnFrameComplete() {
-  DCHECK(outstanding_requests_ > 0);
+  FTL_DCHECK(outstanding_requests_ > 0);
   --outstanding_requests_;
 
   if (deferred_invalidation_callback_ &&

@@ -9,8 +9,8 @@
 
 #include <unordered_set>
 
-#include "apps/modular/services/application/application_environment.fidl.h"
-#include "apps/modular/services/application/service_provider.fidl.h"
+#include "application/services/application_environment.fidl.h"
+#include "application/services/service_provider.fidl.h"
 #include "apps/mozart/services/input/input_connection.fidl.h"
 #include "apps/mozart/services/views/view_manager.fidl.h"
 #include "flutter/assets/unzipper_provider.h"
@@ -19,10 +19,14 @@
 #include "flutter/lib/ui/window/viewport_metrics.h"
 #include "flutter/runtime/runtime_controller.h"
 #include "flutter/runtime/runtime_delegate.h"
-#include "lib/ftl/functional/closure.h"
-#include "base/macros.h"
-#include "base/memory/weak_ptr.h"
 #include "lib/fidl/cpp/bindings/binding.h"
+#include "lib/ftl/functional/closure.h"
+#include "lib/ftl/macros.h"
+#include "lib/ftl/memory/weak_ptr.h"
+
+#if FLUTTER_ENABLE_VULKAN
+#include "flutter/content_handler/direct_input.h"
+#endif  // FLUTTER_ENABLE_VULKAN
 
 namespace flutter_runner {
 class Rasterizer;
@@ -34,12 +38,15 @@ class RuntimeHolder : public blink::RuntimeDelegate,
   RuntimeHolder();
   ~RuntimeHolder();
 
-  void Init(fidl::InterfaceHandle<modular::ApplicationEnvironment> environment,
-            fidl::InterfaceRequest<modular::ServiceProvider> outgoing_services,
+  void Init(fidl::InterfaceHandle<app::ApplicationEnvironment> environment,
+            fidl::InterfaceRequest<app::ServiceProvider> outgoing_services,
             std::vector<char> bundle);
   void CreateView(const std::string& script_uri,
                   fidl::InterfaceRequest<mozart::ViewOwner> view_owner_request,
-                  fidl::InterfaceRequest<modular::ServiceProvider> services);
+                  fidl::InterfaceRequest<app::ServiceProvider> services);
+
+  Dart_Port GetUIIsolateMainPort();
+  std::string GetUIIsolateName();
 
  private:
   // |blink::RuntimeDelegate| implementation:
@@ -51,14 +58,14 @@ class RuntimeHolder : public blink::RuntimeDelegate,
   void DidCreateMainIsolate(Dart_Isolate isolate) override;
 
   // |mozart::InputListener| implementation:
-  void OnEvent(mozart::EventPtr event,
+  void OnEvent(mozart::InputEventPtr event,
                const OnEventCallback& callback) override;
 
   // |mozart::ViewListener| implementation:
   void OnInvalidation(mozart::ViewInvalidationPtr invalidation,
                       const OnInvalidationCallback& callback) override;
 
-  base::WeakPtr<RuntimeHolder> GetWeakPtr();
+  ftl::WeakPtr<RuntimeHolder> GetWeakPtr();
 
   void InitRootBundle(std::vector<char> bundle);
   blink::UnzipperProvider GetUnzipperProviderForRootBundle();
@@ -71,9 +78,9 @@ class RuntimeHolder : public blink::RuntimeDelegate,
   void OnFrameComplete();
   void Invalidate();
 
-  modular::ApplicationEnvironmentPtr environment_;
-  modular::ServiceProviderPtr environment_services_;
-  fidl::InterfaceRequest<modular::ServiceProvider> outgoing_services_;
+  app::ApplicationEnvironmentPtr environment_;
+  app::ServiceProviderPtr environment_services_;
+  fidl::InterfaceRequest<app::ServiceProvider> outgoing_services_;
 
   std::vector<char> root_bundle_data_;
   ftl::RefPtr<blink::ZipAssetStore> asset_store_;
@@ -85,6 +92,9 @@ class RuntimeHolder : public blink::RuntimeDelegate,
   mozart::ViewManagerPtr view_manager_;
   fidl::Binding<mozart::ViewListener> view_listener_binding_;
   fidl::Binding<mozart::InputListener> input_listener_binding_;
+#if FLUTTER_ENABLE_VULKAN
+  std::unique_ptr<DirectInput> direct_input_;
+#endif  // FLUTTER_ENABLE_VULKAN
   mozart::InputConnectionPtr input_connection_;
   mozart::ViewPtr view_;
   mozart::ViewPropertiesPtr view_properties_;
@@ -97,9 +107,9 @@ class RuntimeHolder : public blink::RuntimeDelegate,
   bool is_ready_to_draw_ = false;
   int outstanding_requests_ = 0;
 
-  base::WeakPtrFactory<RuntimeHolder> weak_factory_;
+  ftl::WeakPtrFactory<RuntimeHolder> weak_factory_;
 
-  DISALLOW_COPY_AND_ASSIGN(RuntimeHolder);
+  FTL_DISALLOW_COPY_AND_ASSIGN(RuntimeHolder);
 };
 
 }  // namespace flutter_runner

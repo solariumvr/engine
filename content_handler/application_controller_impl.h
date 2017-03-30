@@ -7,36 +7,38 @@
 
 #include <memory>
 
-#include "apps/modular/services/application/application_controller.fidl.h"
-#include "apps/modular/services/application/application_runner.fidl.h"
-#include "apps/modular/services/application/service_provider.fidl.h"
+#include "application/services/application_controller.fidl.h"
+#include "application/services/application_runner.fidl.h"
+#include "application/services/service_provider.fidl.h"
 #include "apps/mozart/services/views/view_provider.fidl.h"
+#include "dart/runtime/include/dart_api.h"
 #include "lib/fidl/cpp/bindings/binding.h"
 #include "lib/fidl/cpp/bindings/binding_set.h"
-#include "base/macros.h"
+#include "lib/ftl/macros.h"
+#include "lib/ftl/synchronization/waitable_event.h"
 
 namespace flutter_runner {
 class App;
 class RuntimeHolder;
 
-class ApplicationControllerImpl : public modular::ApplicationController,
-                                  public modular::ServiceProvider,
+class ApplicationControllerImpl : public app::ApplicationController,
+                                  public app::ServiceProvider,
                                   public mozart::ViewProvider {
  public:
   ApplicationControllerImpl(
       App* app,
-      modular::ApplicationPackagePtr application,
-      modular::ApplicationStartupInfoPtr startup_info,
-      fidl::InterfaceRequest<modular::ApplicationController> controller);
+      app::ApplicationPackagePtr application,
+      app::ApplicationStartupInfoPtr startup_info,
+      fidl::InterfaceRequest<app::ApplicationController> controller);
 
   ~ApplicationControllerImpl() override;
 
-  // |modular::ApplicationController| implementation
+  // |app::ApplicationController| implementation
 
-  void Kill(const KillCallback& callback) override;
+  void Kill() override;
   void Detach() override;
 
-  // |modular::ServiceProvider| implementation
+  // |app::ServiceProvider| implementation
 
   void ConnectToService(const fidl::String& service_name,
                         mx::channel channel) override;
@@ -45,23 +47,26 @@ class ApplicationControllerImpl : public modular::ApplicationController,
 
   void CreateView(
       fidl::InterfaceRequest<mozart::ViewOwner> view_owner_request,
-      fidl::InterfaceRequest<modular::ServiceProvider> services) override;
+      fidl::InterfaceRequest<app::ServiceProvider> services) override;
+
+  Dart_Port GetUIIsolateMainPort();
+  std::string GetUIIsolateName();
 
  private:
   void StartRuntimeIfReady();
 
   App* app_;
-  fidl::Binding<modular::ApplicationController> binding_;
+  fidl::Binding<app::ApplicationController> binding_;
 
-  fidl::BindingSet<modular::ServiceProvider> service_provider_bindings_;
-  modular::ServiceProviderPtr dart_service_provider_;
+  fidl::BindingSet<app::ServiceProvider> service_provider_bindings_;
+  app::ServiceProviderPtr dart_service_provider_;
 
   fidl::BindingSet<mozart::ViewProvider> view_provider_bindings_;
 
   std::string url_;
   std::unique_ptr<RuntimeHolder> runtime_holder_;
 
-  DISALLOW_COPY_AND_ASSIGN(ApplicationControllerImpl);
+  FTL_DISALLOW_COPY_AND_ASSIGN(ApplicationControllerImpl);
 };
 
 }  // namespace flutter_runner

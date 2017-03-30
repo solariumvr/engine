@@ -65,7 +65,6 @@ DartController::~DartController() {
     Dart_SetMessageNotifyCallback(nullptr);
     Dart_ShutdownIsolate();  // deletes ui_dart_state_
     ui_dart_state_ = nullptr;
-    auto error = Dart_Cleanup();
   }
 }
 
@@ -76,7 +75,7 @@ bool DartController::SendStartMessage(Dart_Handle root_library) {
   {
     // Temporarily exit the isolate while we make it runnable.
     Dart_Isolate isolate = dart_state()->isolate();
-    DCHECK(Dart_CurrentIsolate() == isolate);
+    FTL_DCHECK(Dart_CurrentIsolate() == isolate);
     Dart_ExitIsolate();
     Dart_IsolateMakeRunnable(isolate);
     Dart_EnterIsolate(isolate);
@@ -113,49 +112,72 @@ bool DartController::SendStartMessage(Dart_Handle root_library) {
   return LogIfError(result);
 }
 
-void DartController::RunFromPrecompiledSnapshot() {
+tonic::DartErrorHandleType DartController::RunFromKernel(
+    const uint8_t* buffer, size_t size) {
+  tonic::DartState::Scope scope(dart_state());
+  Dart_Handle result = Dart_LoadKernel(Dart_ReadKernelBinary(buffer, size));
+  LogIfError(result);
+  tonic::DartErrorHandleType error = tonic::GetErrorHandleType(result);
+  if (SendStartMessage(Dart_RootLibrary())) {
+    return tonic::kUnknownErrorType;
+  }
+  return error;
+}
+
+tonic::DartErrorHandleType DartController::RunFromPrecompiledSnapshot() {
   TRACE_EVENT0("flutter", "DartController::RunFromPrecompiledSnapshot");
-  DCHECK(Dart_CurrentIsolate() == nullptr);
+  FTL_DCHECK(Dart_CurrentIsolate() == nullptr);
   tonic::DartState::Scope scope(dart_state());
-  if (SendStartMessage(Dart_RootLibrary()))
-    exit(1);
+  if (SendStartMessage(Dart_RootLibrary())) {
+    return tonic::kUnknownErrorType;
+  }
+  return tonic::kNoError;
 }
 
-void DartController::RunFromSnapshot(const uint8_t* buffer, size_t size) {
+tonic::DartErrorHandleType DartController::RunFromSnapshot(
+    const uint8_t* buffer, size_t size) {
   tonic::DartState::Scope scope(dart_state());
-  LogIfError(Dart_LoadScriptFromSnapshot(buffer, size));
-  if (SendStartMessage(Dart_RootLibrary()))
-    exit(1);
+  Dart_Handle result = Dart_LoadScriptFromSnapshot(buffer, size);
+  LogIfError(result);
+  tonic::DartErrorHandleType error = tonic::GetErrorHandleType(result);
+  if (SendStartMessage(Dart_RootLibrary())) {
+    return tonic::kUnknownErrorType;
+  }
+  return error;
 }
 
-void DartController::RunFromSource(const std::string& main,
-                                   const std::string& packages) {
+tonic::DartErrorHandleType DartController::RunFromSource(
+    const std::string& main, const std::string& packages) {
   tonic::DartState::Scope scope(dart_state());
-	tonic::DefaultFileLoader& loader = static_cast<tonic::DefaultFileLoader&>(dart_state()->file_loader());
-  if (!packages.empty() && !loader.LoadPackagesMap(packages))
-    LOG(WARNING) << "Failed to load package map: " << packages;
-  LogIfError(loader.LoadScript(main));
-  if (SendStartMessage(Dart_RootLibrary()))
-    exit(1);
+    tonic::DefaultFileLoader& loader = static_cast<tonic::DefaultFileLoader&>(dart_state()->file_loader());
+  if (!packages.empty() && !loader.LoadPackagesMap(ResolvePath(packages)))
+    FTL_LOG(WARNING) << "Failed to load package map: " << packages;
+  Dart_Handle result = loader.LoadScript(main);
+  LogIfError(result);
+  tonic::DartErrorHandleType error = tonic::GetErrorHandleType(result);
+  if (SendStartMessage(Dart_RootLibrary())) {
+    return tonic::kCompilationErrorType;
+  }
+  return error;
 }
 
 void DartController::CreateIsolateFor(const std::string& script_uri,
                                       std::unique_ptr<UIDartState> state) {
   char* error = nullptr;
   Dart_Isolate isolate = Dart_CreateIsolate(
-	  script_uri.c_str(), "main",
-	  reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartIsolateSnapshotData)),
-	  reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartIsolateSnapshotInstructions)),
-	  nullptr,
-	  static_cast<tonic::DartState*>(state.get()), &error);
-  CHECK(isolate) << error;
+      script_uri.c_str(), "main",
+      reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartIsolateSnapshotData)),
+      reinterpret_cast<uint8_t*>(DART_SYMBOL(kDartIsolateSnapshotInstructions)),
+      nullptr,
+      static_cast<tonic::DartState*>(state.get()), &error);
+  FTL_CHECK(isolate) << error;
   ui_dart_state_ = state.release();
   dart_state()->message_handler().Initialize(blink::Threads::UI());
 
   Dart_SetShouldPauseOnStart(Settings::Get().start_paused);
 
   ui_dart_state_->SetIsolate(isolate);
-  CHECK(!LogIfError(
+  FTL_CHECK(!LogIfError(
       Dart_SetLibraryTagHandler(tonic::DartState::HandleLibraryTag)));
 
   {

@@ -9,13 +9,13 @@
 #include <string>
 #include <vector>
 
-#include "base/base64.h"
 #include "flutter/common/threads.h"
+#include "flutter/shell/common/picture_serializer.h"
 #include "flutter/shell/common/rasterizer.h"
 #include "flutter/shell/common/shell.h"
-#include "base/memory/weak_ptr.h"
-#include "third_party/skia/include/core/SkImageEncoder.h"
+#include "lib/ftl/memory/weak_ptr.h"
 #include "third_party/skia/include/core/SkSurface.h"
+#include "third_party/skia/src/utils/SkBase64.h"
 
 namespace shell {
 namespace {
@@ -103,10 +103,10 @@ static void AppendFlutterView(std::stringstream* stream,
                               int64_t isolate_id,
                               const std::string isolate_name) {
   *stream << "{\"type\":\"FlutterView\", \"id\": \"" << kViewIdPrefx << "0x"
-          << std::hex << view_id << std::dec;
+          << std::hex << view_id << std::dec << "\"";
   if (isolate_id != ILLEGAL_PORT) {
     // Append the isolate (if it exists).
-    *stream << "\","
+    *stream << ","
             << "\"isolate\":";
     AppendIsolateRef(stream, isolate_id, isolate_name);
   }
@@ -235,6 +235,22 @@ bool PlatformViewServiceProtocol::ListViews(const char* method,
 const char* PlatformViewServiceProtocol::kScreenshotExtensionName =
     "_flutter.screenshot";
 
+static sk_sp<SkData> EncodeBitmapAsPNG(const SkBitmap& bitmap) {
+  if (bitmap.empty()) {
+    return nullptr;
+  }
+
+  SkPixmap pixmap;
+  if (!bitmap.peekPixels(&pixmap)) {
+    return nullptr;
+  }
+
+  PngPixelSerializer serializer;
+  sk_sp<SkData> data(serializer.encode(pixmap));
+
+  return data;
+}
+
 bool PlatformViewServiceProtocol::Screenshot(const char* method,
                                              const char** param_keys,
                                              const char** param_values,
@@ -250,30 +266,25 @@ bool PlatformViewServiceProtocol::Screenshot(const char* method,
 
   latch.Wait();
 
-  if (bitmap.empty())
-    return ErrorServer(json_object, "no screenshot available");
-
-  sk_sp<SkData> png(
-      SkImageEncoder::EncodeData(bitmap, SkImageEncoder::Type::kPNG_Type,
-                                 SkImageEncoder::kDefaultQuality));
+  sk_sp<SkData> png(EncodeBitmapAsPNG(bitmap));
 
   if (!png)
     return ErrorServer(json_object, "can not encode screenshot");
 
-  std::string base64;
-  base::Base64Encode(
-      base::StringPiece(static_cast<const char*>(png->data()), png->size()),
-      &base64);
+  size_t b64_size = SkBase64::Encode(png->data(), png->size(), nullptr);
+  SkAutoTMalloc<char> b64_data(b64_size);
+  SkBase64::Encode(png->data(), png->size(), b64_data.get());
 
   std::stringstream response;
   response << "{\"type\":\"Screenshot\","
-           << "\"screenshot\":\"" << base64 << "\"}";
+           << "\"screenshot\":\"" << std::string{b64_data.get(), b64_size}
+           << "\"}";
   *json_object = strdup(response.str().c_str());
   return true;
 }
 
 void PlatformViewServiceProtocol::ScreenshotGpuTask(SkBitmap* bitmap) {
-  std::vector<base::WeakPtr<Rasterizer>> rasterizers;
+  std::vector<ftl::WeakPtr<Rasterizer>> rasterizers;
   Shell::Shared().GetRasterizers(&rasterizers);
   if (rasterizers.size() != 1)
     return;
@@ -293,12 +304,12 @@ void PlatformViewServiceProtocol::ScreenshotGpuTask(SkBitmap* bitmap) {
   sk_sp<SkSurface> surface = SkSurface::MakeRasterDirect(
       bitmap->info(), bitmap->getPixels(), bitmap->rowBytes());
 
-  flow::CompositorContext compositor_context;
+  flow::CompositorContext compositor_context(nullptr);
   SkCanvas* canvas = surface->getCanvas();
   flow::CompositorContext::ScopedFrame frame =
       compositor_context.AcquireFrame(nullptr, canvas, false);
 
-  canvas->clear(SK_ColorTRANSPARENT);
+  canvas->clear(SK_ColorBLACK);
   layer_tree->Raster(frame);
   canvas->flush();
 }

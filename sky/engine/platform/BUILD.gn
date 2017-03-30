@@ -249,7 +249,8 @@ source_set("platform") {
     "//flutter/common",
     "//flutter/sky/engine/wtf",
     "//third_party/skia",
-#    "//third_party/skia:gpu",
+    "//third_party/skia:effects",
+    "//third_party/skia:gpu",
   ]
 
   if (!is_mac) {
@@ -263,30 +264,16 @@ source_set("platform") {
     sources += [ "fonts/apple/FontPlatformDataApple.cpp" ]
   }
 
-  if (is_win){
-    sources += [ "fonts/apple/FontPlatformDataApple.cpp" ]
-    sources += [ "fonts/apple/FontCacheMac.cpp" ]
-  }
-
-  if (is_ios) {
-    deps += [ "//base" ]
-    sources += [ "fonts/apple/FontCacheIOS.mm" ]
-  }
-
   if (is_mac && !is_ios) {
-    sources += [ "fonts/apple/FontCacheMac.cpp" ]
+    sources += [ "fonts/FontCacheEmpty.cpp" ]
   }
 
-  if (is_android) {
-    sources += [
-      "fonts/android/FontCacheAndroid.cpp",
-    ]
+  if (is_android || is_ios) {
+    sources += [ "fonts/mobile/FontCacheMobile.cpp" ]
   }
 
   if (is_linux && !is_android) {
-    sources += [
-      "fonts/linux/FontCacheLinux.cpp",
-    ]
+    sources += [ "fonts/FontCacheEmpty.cpp" ]
   }
 
   if (is_fuchsia) {
@@ -295,9 +282,7 @@ source_set("platform") {
       "fonts/fuchsia/FontCacheFuchsia.h",
     ]
 
-    deps += [
-      "//apps/fonts/services",
-    ]
+    deps += [ "//apps/fonts/services" ]
   }
 
   configs += [
@@ -315,9 +300,7 @@ source_set("platform") {
   if (is_android) {
     # Add in some Linux files also shared with Android.
     set_sources_assignment_filter([])
-    sources += [
-      "fonts/linux/FontPlatformDataLinux.cpp",
-    ]
+    sources += [ "fonts/linux/FontPlatformDataLinux.cpp" ]
     set_sources_assignment_filter(sources_assignment_filter)
   }
 }

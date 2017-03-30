@@ -2,119 +2,129 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/at_exit.h"
-#include "base/basictypes.h"
-#include "base/bind.h"
-#include "base/command_line.h"
-#include "base/logging.h"
-#include "base/run_loop.h"
-#include "base/message_loop/message_loop.h"
-#include "base/files/file_util.h"
+#include "dart/runtime/bin/embedded_dart_io.h"
 #include "flutter/common/threads.h"
+#include "flutter/fml/message_loop.h"
+#include "flutter/shell/common/platform_view.h"
 #include "flutter/shell/common/shell.h"
 #include "flutter/shell/common/switches.h"
-#include "flutter/shell/gpu/gpu_surface_gl.h"
-#include "flutter/shell/platform/linux/message_pump_glfw.h"
-#include "flutter/shell/platform/linux/platform_view_glfw.h"
+#include "flutter/shell/testing/test_runner.h"
 #include "flutter/shell/testing/testing.h"
+#include "flutter/sky/engine/public/web/Sky.h"
+#include "lib/ftl/command_line.h"
+#include "lib/tonic/dart_microtask_queue.h"
 
 namespace {
 
-int RunNonInteractive() {
-  base::MessageLoop message_loop;
+// Exit codes used by the Dart command line tool.
+const int kApiErrorExitCode = 253;
+const int kCompilationErrorExitCode = 254;
+const int kErrorExitCode = 255;
 
-  shell::Shell::InitStandalone();
+// Checks whether the engine's main Dart isolate has no pending work.  If so,
+// then exit the given message loop.
+class ScriptCompletionTaskObserver : public fml::TaskObserver {
+ public:
+  ScriptCompletionTaskObserver(ftl::RefPtr<ftl::TaskRunner> task_runner)
+      : main_task_runner_(std::move(task_runner)),
+        prev_live_(false),
+        last_error_(tonic::kNoError) {}
 
-  if (!shell::InitForTesting()) {
-    shell::PrintUsage("sky_shell");
-    return 1;
+  void DidProcessTask() override {
+    shell::TestRunner& test_runner = shell::TestRunner::Shared();
+    shell::Engine& engine = test_runner.platform_view().engine();
+
+    if (engine.GetLoadScriptError() != tonic::kNoError) {
+      last_error_ = engine.GetLoadScriptError();
+      main_task_runner_->PostTask(
+          []() { fml::MessageLoop::GetCurrent().Terminate(); });
+      return;
+    }
+
+    bool live = engine.UIIsolateHasLivePorts();
+    if (prev_live_ && !live) {
+      last_error_ = engine.GetUIIsolateLastError();
+      main_task_runner_->PostTask(
+          []() { fml::MessageLoop::GetCurrent().Terminate(); });
+    }
+    prev_live_ = live;
   }
 
-	base::RunLoop().Run();
-  //message_loop.Run();
-  return 0;
+  tonic::DartErrorHandleType last_error() { return last_error_; }
+
+ private:
+  ftl::RefPtr<ftl::TaskRunner> main_task_runner_;
+  bool prev_live_;
+  tonic::DartErrorHandleType last_error_;
+};
+
+int ConvertErrorTypeToExitCode(tonic::DartErrorHandleType error) {
+  switch (error) {
+    case tonic::kCompilationErrorType:
+      return kCompilationErrorExitCode;
+    case tonic::kApiErrorType:
+      return kApiErrorExitCode;
+    case tonic::kUnknownErrorType:
+      return kErrorExitCode;
+    default:
+      return 0;
+  }
 }
 
-static bool IsDartFile(const std::string& path) {
-  std::string dart_extension = ".dart";
-  return path.rfind(dart_extension) == (path.size() - dart_extension.size());
-}
+void RunNonInteractive(ftl::CommandLine initial_command_line,
+                       bool run_forever) {
+  // This is a platform thread (i.e not one created by fml::Thread), so perform
+  // one time initialization.
+  fml::MessageLoop::EnsureInitializedForCurrentThread();
 
-int RunInteractive() {
-  base::CommandLine& command_line = *base::CommandLine::ForCurrentProcess();
+  shell::Shell::InitStandalone(initial_command_line);
 
-  base::MessageLoop message_loop(shell::MessagePumpGLFW::Create());
-
-  shell::Shell::InitStandalone();
-
-	blink::Threads::Platform()->PostTask([&]() {
-  std::string target = command_line.GetSwitchValueASCII(
-      shell::FlagForSwitch(shell::Switch::FLX));
-
-  if (target.empty()) {
-    // Alternatively, use the first positional argument.
-    auto args = command_line.GetArgs();
-    if (args.empty())
-      return 1;
-    target = std::string(args[0].begin(), args[0].end());
+  // Note that this task observer must be added after the observer that drains
+  // the microtask queue.
+  ScriptCompletionTaskObserver task_observer(
+      fml::MessageLoop::GetCurrent().GetTaskRunner());
+  if (!run_forever) {
+    blink::Threads::UI()->PostTask([&task_observer] {
+      fml::MessageLoop::GetCurrent().AddTaskObserver(&task_observer);
+    });
   }
 
-  if (target.empty())
-    return 1;
+  if (!shell::InitForTesting(initial_command_line)) {
+    shell::PrintUsage("flutter_tester");
+    exit(EXIT_FAILURE);
+    return;
+  }
 
-  std::unique_ptr<shell::PlatformViewGLFW> platform_view(
-      new shell::PlatformViewGLFW());
+  fml::MessageLoop::GetCurrent().Run();
 
-  platform_view->NotifyCreated(
-      std::make_unique<shell::GPUSurfaceGL>(platform_view.get()));
+  shell::TestRunner& test_runner = shell::TestRunner::Shared();
+  tonic::DartErrorHandleType error =
+      test_runner.platform_view().engine().GetLoadScriptError();
+  if (error == tonic::kNoError)
+    error = task_observer.last_error();
+  if (error == tonic::kNoError)
+    error = tonic::DartMicrotaskQueue::GetLastError();
 
-  blink::Threads::UI()->PostTask(
-      [ engine = platform_view->engine().GetWeakPtr(), target ] {
-        if (engine) {
-          if (IsDartFile(target)) {
-            engine->RunBundleAndSource(std::string(), target, std::string());
-
-          } else {
-            engine->RunBundle(target);
-          }
-        }
-      });
-
-  base::RunLoop().Run();
-  platform_view->NotifyDestroyed();
-
-	});
-	//blink::Threads::Platform()->PostDelayedTask([]() {
-	//	base::MessageLoop::current()->QuitNow();
-	//}, ftl::TimeDelta::FromSeconds(4));
-  base::RunLoop().Run();
-
-  return 0;
+  // The script has completed and the engine may not be in a clean state,
+  // so just stop the process.
+  exit(ConvertErrorTypeToExitCode(error));
 }
 
 }  // namespace
 
-int main(int argc, const char* argv[]) {
-  base::AtExitManager exit_manager;
-  base::CommandLine::Init(argc, argv);
+int main(int argc, char* argv[]) {
+  dart::bin::SetExecutableName(argv[0]);
+  dart::bin::SetExecutableArguments(argc - 1, argv);
 
-  base::CommandLine& command_line = *base::CommandLine::ForCurrentProcess();
+  auto command_line = ftl::CommandLineFromArgcArgv(argc, argv);
 
-  logging::SetLogItems(true,  // Process ID
-                       true,  // Thread ID
-                       true,  // Timestamp
-                       true   // Tick ount
-                       );
-
-  if (command_line.HasSwitch(shell::FlagForSwitch(shell::Switch::Help))) {
-    shell::PrintUsage("sky_shell");
-    return 0;
+  if (command_line.HasOption(shell::FlagForSwitch(shell::Switch::Help))) {
+    shell::PrintUsage("flutter_tester");
+    return EXIT_SUCCESS;
   }
 
-  if (command_line.HasSwitch(
-          shell::FlagForSwitch(shell::Switch::NonInteractive))) {
-    return RunNonInteractive();
-  }
-
-  return RunInteractive();
+  bool run_forever =
+      command_line.HasOption(shell::FlagForSwitch(shell::Switch::RunForever));
+  RunNonInteractive(std::move(command_line), run_forever);
+  return EXIT_SUCCESS;
 }

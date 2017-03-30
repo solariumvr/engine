@@ -53,7 +53,7 @@ const int tsHeightMask = 1 << tsHeightIndex;
 const int psTextAlignIndex = 1;
 const int psFontWeightIndex = 2;
 const int psFontStyleIndex = 3;
-// index 4 reserved for LineCount
+const int psMaxLinesIndex = 4;
 const int psFontFamilyIndex = 5;
 const int psFontSizeIndex = 6;
 const int psLineHeightIndex = 7;
@@ -62,6 +62,7 @@ const int psEllipsisIndex = 8;
 const int psTextAlignMask = 1 << psTextAlignIndex;
 const int psFontWeightMask = 1 << psFontWeightIndex;
 const int psFontStyleMask = 1 << psFontStyleIndex;
+const int psMaxLinesMask = 1 << psMaxLinesIndex;
 const int psFontFamilyMask = 1 << psFontFamilyIndex;
 const int psFontSizeMask = 1 << psFontSizeIndex;
 const int psLineHeightMask = 1 << psLineHeightIndex;
@@ -144,10 +145,11 @@ PassRefPtr<RenderStyle> decodeParagraphStyle(
   if (mask & psLineHeightMask)
     style->setLineHeight(Length(lineHeight * 100.0, Percent));
 
-  if (mask & psEllipsisMask) {
+  if (mask & psMaxLinesMask)
+    style->setMaxLines(encoded[psMaxLinesIndex]);
+
+  if (mask & psEllipsisMask)
     style->setEllipsis(AtomicString::fromUTF8(ellipsis.c_str()));
-    style->setWordBreak(BreakAllWordBreak);
-  }
 
   return style.release();
 }

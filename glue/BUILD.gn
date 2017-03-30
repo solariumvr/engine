@@ -2,7 +2,6 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-
 source_set("glue") {
   sources = [
     "stack_trace.h",
@@ -14,18 +13,14 @@ source_set("glue") {
   ]
 
   if (is_fuchsia || is_fuchsia_host) {
-    sources += [
-      "stack_trace_fuchsia.cc",
+    sources += [ "stack_trace_fuchsia.cc" ]
+
+    public_deps = [
+      "//apps/tracing/lib/trace",
     ]
   } else {
-    sources += [
-      "stack_trace_base.cc",
-      "task_runner_adaptor.cc",
-      "task_runner_adaptor.h",
-    ]
+    sources += [ "stack_trace_base.cc" ]
 
-    deps += [
-      "//base",
-    ]
+    deps += [ "//flutter/fml" ]
   }
 }

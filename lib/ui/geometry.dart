@@ -24,6 +24,9 @@ abstract class OffsetBase {
   /// _both_ dimensions set to [double.INFINITY].
   bool get isInfinite => _dx >= double.INFINITY || _dy >= double.INFINITY;
 
+  /// Whether both dimensions are finite.
+  bool get isFinite => _dx.isFinite && _dy.isFinite;
+
   /// Less-than operator. Compares an [Offset] or [Size] to another [Offset] or
   /// [Size], and returns true if both the horizontal and vertical values of the
   /// left-hand-side operand are smaller than the horizontal and vertical values
@@ -356,6 +359,9 @@ class Size extends OffsetBase {
   /// See also [Rect.bottomRight].
   Point bottomRight(Point origin) => new Point(origin.x + width, origin.y + height);
 
+  /// A size with the width and height swapped.
+  Size get flipped => new Size(height, width);
+
   /// Linearly interpolate between two sizes
   ///
   /// If either size is null, this function interpolates from [Offset.zero].
@@ -478,6 +484,12 @@ class Point {
 
 /// An immutable 2D, axis-aligned, floating-point rectangle whose coordinates
 /// are relative to an origin point.
+///
+/// A Rect can be created with one its constructors or with a [Point] and
+/// a [Size] using the `&` operator:
+/// ```dart
+/// Rect myRect = const Point(1.0, 2.0) & const Size(3.0, 4.0);
+///```
 class Rect {
   Rect._();
 
@@ -576,6 +588,9 @@ class Rect {
   /// Whether this rectangle encloses a non-zero area.
   /// Negative areas are considered empty.
   bool get isEmpty => left >= right || top >= bottom;
+
+  /// Whether all coordinates of this rectangle are finite.
+  bool get isFinite => left.isFinite && top.isFinite && right.isFinite && bottom.isFinite;
 
   /// The lesser of the magnitudes of the width and the height of this
   /// rectangle.
