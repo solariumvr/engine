@@ -31,7 +31,7 @@ void OpacityLayer::UpdateScene(SceneUpdateContext& context,
 #endif  // defined(OS_FUCHSIA)
 
 void OpacityLayer::Paint(PaintContext& context) {
-  TRACE_EVENT0("flutter", "OpacityLayer::Paint");
+  //TRACE_EVENT0("flutter", "OpacityLayer::Paint");
   DCHECK(!needs_system_composite());
 
   SkPaint paint;

@@ -1,0 +1,101 @@
+# Copyright 2016 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+declare_args(){
+
+    }
+group("win"){
+    deps = [
+        ":win_run",
+        ":testing",
+    ]
+}
+executable("win_run") {
+
+  sources = [
+    "message_pump_glfw.cc",
+    "message_pump_glfw.h",
+    "platform_view_glfw.cc",
+    "platform_view_glfw.h",
+    "vsync_waiter_glfw.cc",
+    "vsync_waiter_glfw.h",
+    "main.cc",
+  ]
+
+  configs += [
+    "//third_party/glm",
+  ]
+
+  deps = [
+    "//base",
+    "//flutter/common",
+    "//flutter/shell/common",
+    "//flutter/shell/gpu",
+    "//flutter/shell/testing",
+    "//lib/ftl",
+    "//third_party/glfw",
+    "//third_party/glad",
+    "//third_party/skia",
+    # Required by FontCacheLinux. Not Skia. Skia uses a custom font manager
+    # that delegates to us.
+#    "//third_party:fontconfig",
+#    "//solarium/engine",
+  ]
+
+
+if(!is_win){
+  ldflags = [
+    "-lGL",
+  ]
+} else {
+    libs = [
+        "opengl32.lib",
+        "iphlpapi.lib",
+        "psapi.lib",
+        "ws2_32.lib",
+        "Rpcrt4.lib",
+        "winmm.lib",
+        "glu32.lib",
+    ]
+    ldflags = [
+#        "-lgdi32"
+    ]
+}
+}
+
+
+executable("testing"){
+    sources = [
+        "testing.cc",
+        "linmath.h"
+    ]
+
+    deps = [
+    "//third_party/glfw",
+    "//third_party/glad",
+    "//third_party/skia",
+    ]
+
+    libs = [
+        "opengl32.lib"
+    ]
+}
+
+executable("linux_new") {
+  output_name = "flutter_tester"
+
+  sources = [
+    "main_linux.cc",
+  ]
+
+  deps = [
+    "//dart/runtime/bin:embedded_dart_io",
+    "//flutter/common",
+#    "//flutter/fml",
+    "//flutter/shell/common",
+    "//flutter/shell/testing",
+    "//lib/ftl",
+    "//lib/tonic",
+    "//third_party/skia",
+  ]
+}

@@ -95,7 +95,7 @@ bool GPUSurfaceGL::PresentSurface(SkCanvas* canvas) {
   }
 
   {
-    TRACE_EVENT0("flutter", "SkCanvas::Flush");
+    //TRACE_EVENT0("flutter", "SkCanvas::Flush");
     canvas->flush();
   }
 

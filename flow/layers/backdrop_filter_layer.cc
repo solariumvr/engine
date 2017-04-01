@@ -13,7 +13,7 @@ BackdropFilterLayer::BackdropFilterLayer() {}
 BackdropFilterLayer::~BackdropFilterLayer() {}
 
 void BackdropFilterLayer::Paint(PaintContext& context) {
-  TRACE_EVENT0("flutter", "BackdropFilterLayer::Paint");
+  //TRACE_EVENT0("flutter", "BackdropFilterLayer::Paint");
   SkAutoCanvasRestore save(&context.canvas, false);
   context.canvas.saveLayer(
       SkCanvas::SaveLayerRec{&paint_bounds(), nullptr, filter_.get(), 0});

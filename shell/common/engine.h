@@ -12,7 +12,7 @@
 #include "flutter/runtime/runtime_delegate.h"
 #include "flutter/shell/common/rasterizer.h"
 #include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "third_party/skia/include/core/SkPicture.h"
 
 namespace blink {
@@ -31,7 +31,7 @@ class Engine : public blink::RuntimeDelegate {
 
   ~Engine() override;
 
-  ftl::WeakPtr<Engine> GetWeakPtr();
+  base::WeakPtr<Engine> GetWeakPtr();
 
   static void Init();
 
@@ -94,7 +94,7 @@ class Engine : public blink::RuntimeDelegate {
   void HandleAssetPlatformMessage(ftl::RefPtr<blink::PlatformMessage> message);
   bool GetAssetAsBuffer(const std::string& name, std::vector<uint8_t>* data);
 
-  ftl::WeakPtr<PlatformView> platform_view_;
+  base::WeakPtr<PlatformView> platform_view_;
   std::unique_ptr<Animator> animator_;
   std::unique_ptr<blink::RuntimeController> runtime_;
   tonic::DartErrorHandleType load_script_error_;
@@ -109,7 +109,7 @@ class Engine : public blink::RuntimeDelegate {
   // TODO(eseidel): This should move into an AnimatorStateMachine.
   bool activity_running_;
   bool have_surface_;
-  ftl::WeakPtrFactory<Engine> weak_factory_;
+  base::WeakPtrFactory<Engine> weak_factory_;
 
   FTL_DISALLOW_COPY_AND_ASSIGN(Engine);
 };

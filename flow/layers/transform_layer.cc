@@ -35,7 +35,7 @@ void TransformLayer::UpdateScene(SceneUpdateContext& context,
 #endif  // defined(OS_FUCHSIA)
 
 void TransformLayer::Paint(PaintContext& context) {
-  TRACE_EVENT0("flutter", "TransformLayer::Paint");
+  //TRACE_EVENT0("flutter", "TransformLayer::Paint");
   DCHECK(!needs_system_composite());
 
   SkAutoCanvasRestore save(&context.canvas, true);

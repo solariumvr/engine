@@ -28,7 +28,7 @@ GPURasterizer::~GPURasterizer() {
   Shell::Shared().PurgeRasterizers();
 }
 
-ftl::WeakPtr<Rasterizer> GPURasterizer::GetWeakRasterizerPtr() {
+base::WeakPtr<Rasterizer> GPURasterizer::GetWeakRasterizerPtr() {
   return weak_factory_.GetWeakPtr();
 }
 
@@ -80,7 +80,7 @@ flow::LayerTree* GPURasterizer::GetLastLayerTree() {
 
 void GPURasterizer::Draw(
     ftl::RefPtr<flutter::Pipeline<flow::LayerTree>> pipeline) {
-  TRACE_EVENT0("flutter", "GPURasterizer::Draw");
+  //TRACE_EVENT0("flutter", "GPURasterizer::Draw");
 
   flutter::Pipeline<flow::LayerTree>::Consumer consumer =
       std::bind(&GPURasterizer::DoDraw, this, std::placeholders::_1);

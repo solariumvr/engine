@@ -25,7 +25,7 @@ void LayerTree::Raster(CompositorContext::ScopedFrame& frame,
 
 void LayerTree::Preroll(CompositorContext::ScopedFrame& frame,
                         bool ignore_raster_cache) {
-  TRACE_EVENT0("flutter", "LayerTree::Preroll");
+  //TRACE_EVENT0("flutter", "LayerTree::Preroll");
   frame.context().raster_cache().SetCheckboardCacheImages(
       checkerboard_raster_cache_images_);
   Layer::PrerollContext context = {
@@ -53,7 +53,7 @@ void LayerTree::Paint(CompositorContext::ScopedFrame& frame) {
   Layer::PaintContext context = {frame.canvas(), frame.context().frame_time(),
                                  frame.context().engine_time(),
                                  frame.context().memory_usage()};
-  TRACE_EVENT0("flutter", "LayerTree::Paint");
+  //TRACE_EVENT0("flutter", "LayerTree::Paint");
   root_layer_->Paint(context);
 }
 

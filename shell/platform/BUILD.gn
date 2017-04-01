@@ -13,10 +13,12 @@ group("platform") {
     ]
   } else if (is_linux) {
     deps = [
-      "linux",
+      "win",
     ]
   } else if (is_win) {
-    print("Shell currently not supported on Windows.")
+    deps = [
+        "windows"
+    ]
   } else {
     assert(false, "Unknown/Unsupported platform.")
   }

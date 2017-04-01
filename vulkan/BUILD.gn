@@ -60,7 +60,7 @@ source_set("vulkan") {
   deps = [
     "//lib/ftl",
     "//third_party/skia",
-    "//third_party/skia:gpu",
+#    "//third_party/skia:gpu",
   ]
 
   public_configs = [ ":vulkan_config" ]

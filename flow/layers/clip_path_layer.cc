@@ -34,7 +34,7 @@ void ClipPathLayer::UpdateScene(SceneUpdateContext& context,
 #endif  // defined(OS_FUCHSIA)
 
 void ClipPathLayer::Paint(PaintContext& context) {
-  TRACE_EVENT0("flutter", "ClipPathLayer::Paint");
+  //TRACE_EVENT0("flutter", "ClipPathLayer::Paint");
   DCHECK(!needs_system_composite());
 
   SkAutoCanvasRestore save(&context.canvas, false);

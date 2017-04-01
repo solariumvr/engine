@@ -76,19 +76,19 @@ void RuntimeController::BeginFrame(ftl::TimePoint frame_time) {
 
 void RuntimeController::DispatchPlatformMessage(
     ftl::RefPtr<PlatformMessage> message) {
-  TRACE_EVENT0("flutter", "RuntimeController::DispatchPlatformMessage");
+  //TRACE_EVENT0("flutter", "RuntimeController::DispatchPlatformMessage");
   GetWindow()->DispatchPlatformMessage(std::move(message));
 }
 
 void RuntimeController::DispatchPointerDataPacket(
     const PointerDataPacket& packet) {
-  TRACE_EVENT0("flutter", "RuntimeController::DispatchPointerDataPacket");
+  //TRACE_EVENT0("flutter", "RuntimeController::DispatchPointerDataPacket");
   GetWindow()->DispatchPointerDataPacket(packet);
 }
 
 void RuntimeController::DispatchSemanticsAction(int32_t id,
                                                 SemanticsAction action) {
-  TRACE_EVENT0("flutter", "RuntimeController::DispatchSemanticsAction");
+  //TRACE_EVENT0("flutter", "RuntimeController::DispatchSemanticsAction");
   GetWindow()->DispatchSemanticsAction(id, action);
 }
 

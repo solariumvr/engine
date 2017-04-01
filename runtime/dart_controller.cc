@@ -18,6 +18,7 @@
 #include "flutter/runtime/dart_service_isolate.h"
 #include "lib/ftl/files/directory.h"
 #include "lib/ftl/files/path.h"
+#include "lib/ftl/logging.h"
 #include "lib/tonic/dart_class_library.h"
 #include "lib/tonic/dart_message_handler.h"
 #include "lib/tonic/dart_state.h"
@@ -125,7 +126,7 @@ tonic::DartErrorHandleType DartController::RunFromKernel(
 }
 
 tonic::DartErrorHandleType DartController::RunFromPrecompiledSnapshot() {
-  TRACE_EVENT0("flutter", "DartController::RunFromPrecompiledSnapshot");
+  //TRACE_EVENT0("flutter", "DartController::RunFromPrecompiledSnapshot");
   FTL_DCHECK(Dart_CurrentIsolate() == nullptr);
   tonic::DartState::Scope scope(dart_state());
   if (SendStartMessage(Dart_RootLibrary())) {
@@ -150,7 +151,7 @@ tonic::DartErrorHandleType DartController::RunFromSource(
     const std::string& main, const std::string& packages) {
   tonic::DartState::Scope scope(dart_state());
     tonic::DefaultFileLoader& loader = static_cast<tonic::DefaultFileLoader&>(dart_state()->file_loader());
-  if (!packages.empty() && !loader.LoadPackagesMap(ResolvePath(packages)))
+  if (!packages.empty() && !loader.LoadPackagesMap(packages))
     FTL_LOG(WARNING) << "Failed to load package map: " << packages;
   Dart_Handle result = loader.LoadScript(main);
   LogIfError(result);

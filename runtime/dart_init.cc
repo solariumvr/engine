@@ -31,6 +31,7 @@
 #include "flutter/runtime/start_up.h"
 #include "lib/ftl/arraysize.h"
 #include "lib/ftl/build_config.h"
+#include "lib/ftl/compiler_specific.h"
 #include "lib/ftl/files/eintr_wrapper.h"
 #include "lib/ftl/files/unique_fd.h"
 #include "lib/ftl/logging.h"
@@ -81,9 +82,7 @@ namespace {
 
 // Arguments passed to the Dart VM in all configurations.
 static const char* kDartLanguageArgs[] = {
-    "--enable_mirrors=false",
-    "--background_compilation",
-    "--await_is_keyword",
+    "--enable_mirrors=true", "--background_compilation", "--await_is_keyword",
     "--assert_initializer",
 };
 
@@ -247,7 +246,7 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
                                    Dart_IsolateFlags* flags,
                                    void* callback_data,
                                    char** error) {
-  TRACE_EVENT0("flutter", __func__);
+  //TRACE_EVENT0("flutter", __func__);
 
   if (IsServiceIsolateURL(script_uri)) {
     return ServiceIsolateCreateCallback(script_uri, error);
@@ -313,8 +312,8 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
 
     if (!kernel_data.empty()) {
       // We are running kernel code.
-      FTL_CHECK(!LogIfError(Dart_LoadKernel(Dart_ReadKernelBinary(kernel_data.data(),
-                                                                  kernel_data.size()))));
+      FTL_CHECK(!LogIfError(Dart_LoadKernel(
+          Dart_ReadKernelBinary(kernel_data.data(), kernel_data.size()))));
     } else if (!snapshot_data.empty()) {
       // We are running from a script snapshot.
       FTL_CHECK(!LogIfError(Dart_LoadScriptFromSnapshot(snapshot_data.data(),
@@ -323,9 +322,12 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
       // We are running from source.
       // Forward the .packages configuration from the parent isolate to the
       // child isolate.
-      tonic::FileLoader& parent_loader = parent_dart_state->file_loader();
+      tonic::DefaultFileLoader& parent_loader =
+          static_cast<tonic::DefaultFileLoader&>(
+              parent_dart_state->file_loader());
       const std::string& packages = parent_loader.packages();
-      tonic::FileLoader& loader = dart_state->file_loader();
+      tonic::DefaultFileLoader& loader =
+          static_cast<tonic::DefaultFileLoader&>(dart_state->file_loader());
       if (!packages.empty() && !loader.LoadPackagesMap(packages)) {
         FTL_LOG(WARNING) << "Failed to load package map: " << packages;
       }
@@ -592,12 +594,12 @@ void PushBackAll(std::vector<const char*>* args,
 }
 
 void InitDartVM() {
-  TRACE_EVENT0("flutter", __func__);
+  //TRACE_EVENT0("flutter", __func__);
 
   const Settings& settings = Settings::Get();
 
   {
-    TRACE_EVENT0("flutter", "dart::bin::BootstrapDartIo");
+    //TRACE_EVENT0("flutter", "dart::bin::BootstrapDartIo");
     dart::bin::BootstrapDartIo();
 
     if (!settings.temp_directory_path.empty()) {
@@ -686,7 +688,7 @@ void InitDartVM() {
   Dart_SetFileModifiedCallback(&DartFileModifiedCallback);
 
   {
-    TRACE_EVENT0("flutter", "Dart_Initialize");
+    //TRACE_EVENT0("flutter", "Dart_Initialize");
     Dart_InitializeParams params = {};
     params.version = DART_INITIALIZE_PARAMS_CURRENT_VERSION;
     params.vm_snapshot_data =

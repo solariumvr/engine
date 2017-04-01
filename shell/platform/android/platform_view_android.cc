@@ -47,11 +47,11 @@ class PlatformMessageResponseAndroid : public blink::PlatformMessageResponse {
 
  private:
   PlatformMessageResponseAndroid(int response_id,
-                                 ftl::WeakPtr<PlatformView> view)
+                                 base::WeakPtr<PlatformView> view)
       : response_id_(response_id), view_(view) {}
 
   int response_id_;
-  ftl::WeakPtr<PlatformView> view_;
+  base::WeakPtr<PlatformView> view_;
 };
 
 static std::unique_ptr<AndroidSurface> InitializePlatformSurfaceGL() {

@@ -18,7 +18,7 @@ PlatformImpl* g_platform_impl = nullptr;
 }  // namespace
 
 void InitRuntime() {
-  TRACE_EVENT0("flutter", "InitRuntime");
+  //TRACE_EVENT0("flutter", "InitRuntime");
 
   CHECK(!g_platform_impl);
   g_platform_impl = new PlatformImpl();

@@ -16,7 +16,7 @@
 #include "flutter/shell/common/platform_view.h"
 #include "flutter/shell/platform/android/android_native_window.h"
 #include "flutter/shell/platform/android/android_surface.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 

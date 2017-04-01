@@ -6,6 +6,8 @@ source_set("glue") {
   sources = [
     "stack_trace.h",
     "trace_event.h",
+    "task_runner_adaptor.h",
+    "task_runner_adaptor.cc",
   ]
 
   deps = [
@@ -21,6 +23,7 @@ source_set("glue") {
   } else {
     sources += [ "stack_trace_base.cc" ]
 
-    deps += [ "//flutter/fml" ]
+#    deps += [ "//flutter/fml" ]
+    deps += [ "//base" ]
   }
 }

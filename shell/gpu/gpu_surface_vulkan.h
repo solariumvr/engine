@@ -10,7 +10,7 @@
 #include "flutter/vulkan/vulkan_native_surface.h"
 #include "flutter/vulkan/vulkan_window.h"
 #include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -31,7 +31,7 @@ class GPUSurfaceVulkan : public Surface {
 
  private:
   vulkan::VulkanWindow window_;
-  ftl::WeakPtrFactory<GPUSurfaceVulkan> weak_factory_;
+  base::WeakPtrFactory<GPUSurfaceVulkan> weak_factory_;
 
   FTL_DISALLOW_COPY_AND_ASSIGN(GPUSurfaceVulkan);
 };

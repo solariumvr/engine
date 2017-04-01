@@ -91,8 +91,8 @@ source_set("common") {
     "surface.h",
     "switches.cc",
     "switches.h",
-#    "tracing_controller.cc",
-#    "tracing_controller.h",
+    "tracing_controller.cc",
+    "tracing_controller.h",
     "vsync_waiter.cc",
     "vsync_waiter.h",
     "vsync_waiter_fallback.cc",
@@ -101,12 +101,13 @@ source_set("common") {
 
   deps = [
     ":generate_embedder_diagnostic_server_resources_cc",
+    "//base",
     "//dart/runtime:libdart",
     "//dart/runtime/vm:libdart_platform",
     "//flutter/assets",
     "//flutter/common",
     "//flutter/flow",
-    "//flutter/fml",
+#    "//flutter/fml",
     "//flutter/glue",
     "//flutter/lib/ui",
     "//flutter/runtime",
@@ -116,6 +117,6 @@ source_set("common") {
     "//lib/tonic",
     "//third_party/rapidjson",
     "//third_party/skia",
-    "//third_party/skia:gpu",
+#    "//third_party/skia:gpu",
   ]
 }

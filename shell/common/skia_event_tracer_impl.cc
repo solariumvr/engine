@@ -5,7 +5,7 @@
 #include "flutter/shell/common/skia_event_tracer_impl.h"
 
 #define TRACE_EVENT_HIDE_MACROS
-#include "flutter/fml/trace_event.h"
+//#include "flutter/fml/trace_event.h"
 
 #include <vector>
 
@@ -30,26 +30,27 @@ class FlutterEventTracer : public SkEventTracer {
                                       const uint8_t* p_arg_types,
                                       const uint64_t* p_arg_values,
                                       uint8_t flags) override {
-    switch (phase) {
-      case TRACE_EVENT_PHASE_BEGIN:
-      case TRACE_EVENT_PHASE_COMPLETE:
-        fml::tracing::TraceEvent0(kSkiaTag, name);
-        break;
-      case TRACE_EVENT_PHASE_END:
-        fml::tracing::TraceEventEnd(name);
-        break;
-      case TRACE_EVENT_PHASE_INSTANT:
-        fml::tracing::TraceEventInstant0(kSkiaTag, name);
-        break;
-      case TRACE_EVENT_PHASE_ASYNC_BEGIN:
-        fml::tracing::TraceEventAsyncBegin0(kSkiaTag, name, id);
-        break;
-      case TRACE_EVENT_PHASE_ASYNC_END:
-        fml::tracing::TraceEventAsyncEnd0(kSkiaTag, name, id);
-        break;
-      default:
-        break;
-    }
+	  //TODO:SOLARIUM enable tracing using chromium/base
+    //switch (phase) {
+    //  case TRACE_EVENT_PHASE_BEGIN:
+    //  case TRACE_EVENT_PHASE_COMPLETE:
+    //    fml::tracing::TraceEvent0(kSkiaTag, name);
+    //    break;
+    //  case TRACE_EVENT_PHASE_END:
+    //    fml::tracing::TraceEventEnd(name);
+    //    break;
+    //  case TRACE_EVENT_PHASE_INSTANT:
+    //    fml::tracing::TraceEventInstant0(kSkiaTag, name);
+    //    break;
+    //  case TRACE_EVENT_PHASE_ASYNC_BEGIN:
+    //    fml::tracing::TraceEventAsyncBegin0(kSkiaTag, name, id);
+    //    break;
+    //  case TRACE_EVENT_PHASE_ASYNC_END:
+    //    fml::tracing::TraceEventAsyncEnd0(kSkiaTag, name, id);
+    //    break;
+    //  default:
+    //    break;
+    //}
     return 0;
   }
 
@@ -58,7 +59,7 @@ class FlutterEventTracer : public SkEventTracer {
                                 SkEventTracer::Handle handle) override {
     // This is only ever called from a scoped trace event so we will just end
     // the section.
-    fml::tracing::TraceEventEnd(name);
+    //base::tracing::TraceEventEnd(name);
   }
 
   const uint8_t* getCategoryGroupEnabled(const char* name) override {

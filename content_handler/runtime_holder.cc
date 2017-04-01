@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "application/lib/app/connect.h"
-#include "dart/runtime/include/dart_api.h"
 #include "flutter/assets/zip_asset_store.h"
 #include "flutter/common/threads.h"
 #include "flutter/content_handler/rasterizer.h"
@@ -404,7 +403,7 @@ void RuntimeHolder::OnInvalidation(mozart::ViewInvalidationPtr invalidation,
   callback();
 }
 
-ftl::WeakPtr<RuntimeHolder> RuntimeHolder::GetWeakPtr() {
+base::WeakPtr<RuntimeHolder> RuntimeHolder::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 

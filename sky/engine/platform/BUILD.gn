@@ -249,8 +249,8 @@ source_set("platform") {
     "//flutter/common",
     "//flutter/sky/engine/wtf",
     "//third_party/skia",
-    "//third_party/skia:effects",
-    "//third_party/skia:gpu",
+#    "//third_party/skia:effects",
+#    "//third_party/skia:gpu",
   ]
 
   if (!is_mac) {
@@ -274,6 +274,17 @@ source_set("platform") {
 
   if (is_linux && !is_android) {
     sources += [ "fonts/FontCacheEmpty.cpp" ]
+  }
+
+  if(is_win){
+    sources += [
+#        "fonts/FontCacheEmpty.cpp",
+#        "fonts/win/FontFallbackWin.cpp",
+#        "fonts/win/FontCallbackWin.h",
+#        "fonts/win/FontPlatformDataWin.cpp",
+    ]
+    sources += [ "fonts/mobile/FontCacheMobile.cpp" ]
+    sources += [ "fonts/apple/FontPlatformDataApple.cpp" ]
   }
 
   if (is_fuchsia) {

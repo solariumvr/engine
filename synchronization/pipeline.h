@@ -52,7 +52,7 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
     ~ProducerContinuation() {
       if (continuation_) {
         continuation_(nullptr, trace_id_);
-        TRACE_EVENT_ASYNC_END0("flutter", "PipelineProduce", trace_id_);
+//        TRACE_EVENT_ASYNC_END0("flutter", "PipelineProduce", trace_id_);
       }
     }
 
@@ -60,7 +60,7 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
       if (continuation_) {
         continuation_(std::move(resource), trace_id_);
         continuation_ = nullptr;
-        TRACE_EVENT_ASYNC_END0("flutter", "PipelineProduce", trace_id_);
+//        TRACE_EVENT_ASYNC_END0("flutter", "PipelineProduce", trace_id_);
       }
     }
 
@@ -75,7 +75,7 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
 
     ProducerContinuation(Continuation continuation, size_t trace_id)
         : continuation_(continuation), trace_id_(trace_id) {
-      TRACE_EVENT_ASYNC_BEGIN0("flutter", "PipelineProduce", trace_id_);
+//      TRACE_EVENT_ASYNC_BEGIN0("flutter", "PipelineProduce", trace_id_);
     }
 
     DISALLOW_COPY_AND_ASSIGN(ProducerContinuation);
@@ -123,7 +123,7 @@ class Pipeline : public ftl::RefCountedThreadSafe<Pipeline<R>> {
     }
 
     {
-      TRACE_EVENT0("flutter", "PipelineConsume");
+      //TRACE_EVENT0("flutter", "PipelineConsume");
       consumer(std::move(resource));
     }
 

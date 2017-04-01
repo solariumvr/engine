@@ -7,20 +7,28 @@
 #include <fcntl.h>
 #include <memory>
 #include <sstream>
-#include <vector>
 
+#include "base/bind.h"
+#include "base/command_line.h"
+#include "base/i18n/icu_util.h"
+#include "base/lazy_instance.h"
+#include "base/memory/discardable_memory.h"
+#include "base/memory/discardable_memory_allocator.h"
+#include "base/posix/eintr_wrapper.h"
+#include "base/single_thread_task_runner.h"
+#include "base/threading/thread.h"
+#include "base/trace_event/trace_event.h"
 #include "dart/runtime/include/dart_tools_api.h"
 #include "flutter/common/settings.h"
 #include "flutter/common/threads.h"
-#include "flutter/fml/icu_util.h"
-#include "flutter/fml/message_loop.h"
-#include "flutter/fml/trace_event.h"
+#include "flutter/glue/task_runner_adaptor.h"
 #include "flutter/runtime/dart_init.h"
 #include "flutter/shell/common/diagnostic/diagnostic_server.h"
 #include "flutter/shell/common/engine.h"
 #include "flutter/shell/common/platform_view_service_protocol.h"
 #include "flutter/shell/common/skia_event_tracer_impl.h"
 #include "flutter/shell/common/switches.h"
+#include "flutter/shell/platform/win/message_pump_glfw.h"
 #include "lib/ftl/files/unique_fd.h"
 
 namespace shell {
@@ -28,11 +36,11 @@ namespace {
 
 static Shell* g_shell = nullptr;
 
-bool IsInvalid(const ftl::WeakPtr<Rasterizer>& rasterizer) {
+bool IsInvalid(const base::WeakPtr<Rasterizer>& rasterizer) {
   return !rasterizer;
 }
 
-bool IsViewInvalid(const ftl::WeakPtr<PlatformView>& platform_view) {
+bool IsViewInvalid(const base::WeakPtr<PlatformView>& platform_view) {
   return !platform_view;
 }
 
@@ -70,17 +78,32 @@ Shell::Shell(ftl::CommandLine command_line)
     : command_line_(std::move(command_line)) {
   FTL_DCHECK(!g_shell);
 
-  gpu_thread_.reset(new fml::Thread("gpu_thread"));
-  ui_thread_.reset(new fml::Thread("ui_thread"));
-  io_thread_.reset(new fml::Thread("io_thread"));
+  base::Thread::Options options;
+  base::Thread::Options platform_options;
+  platform_options.message_pump_factory = base::Bind(shell::MessagePumpGLFW::Create);
 
-  // Since we are not using fml::Thread, we need to initialize the message loop
-  // manually.
-  fml::MessageLoop::EnsureInitializedForCurrentThread();
-  blink::Threads threads(fml::MessageLoop::GetCurrent().GetTaskRunner(),
-                         gpu_thread_->GetTaskRunner(),
-                         ui_thread_->GetTaskRunner(),
-                         io_thread_->GetTaskRunner());
+  platform_thread_.reset(new base::Thread("platform_thread"));
+  platform_thread_->StartWithOptions(platform_options);
+
+  gpu_thread_.reset(new base::Thread("gpu_thread"));
+  gpu_thread_->StartWithOptions(options);
+
+  ui_thread_.reset(new base::Thread("ui_thread"));
+  ui_thread_->StartWithOptions(options);
+
+  io_thread_.reset(new base::Thread("io_thread"));
+  io_thread_->StartWithOptions(options);
+
+	blink::Threads threads(ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
+														base::MessageLoop::current()->task_runner()),
+                         ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
+                             platform_thread_->message_loop()->task_runner()),
+                         ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
+                             gpu_thread_->message_loop()->task_runner()),
+                         ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
+                             ui_thread_->message_loop()->task_runner()),
+                         ftl::MakeRefCounted<glue::TaskRunnerAdaptor>(
+                             io_thread_->message_loop()->task_runner()));
   blink::Threads::Set(threads);
 
   blink::Threads::Gpu()->PostTask([this]() { InitGpuThread(); });
@@ -98,7 +121,8 @@ void Shell::InitStandalone(ftl::CommandLine command_line,
                            std::string application_library_path) {
   TRACE_EVENT0("flutter", "Shell::InitStandalone");
 
-  fml::icu::InitializeICU(icu_data_path);
+  //TODO:SOLARIUM We aren't using this right now.
+//  fml::icu::InitializeICU(icu_data_path);
 
   blink::Settings settings;
   settings.application_library_path = application_library_path;
@@ -207,50 +231,50 @@ TracingController& Shell::tracing_controller() {
 }
 
 void Shell::InitGpuThread() {
-  gpu_thread_checker_.reset(new fml::ThreadChecker());
+  gpu_thread_checker_.reset(new base::ThreadChecker());
 }
 
 void Shell::InitUIThread() {
-  ui_thread_checker_.reset(new fml::ThreadChecker());
+  ui_thread_checker_.reset(new base::ThreadChecker());
 }
 
-void Shell::AddRasterizer(const ftl::WeakPtr<Rasterizer>& rasterizer) {
+void Shell::AddRasterizer(const base::WeakPtr<Rasterizer>& rasterizer) {
   FTL_DCHECK(gpu_thread_checker_ &&
-             gpu_thread_checker_->IsCalledOnValidThread());
+             gpu_thread_checker_->CalledOnValidThread());
   rasterizers_.push_back(rasterizer);
 }
 
 void Shell::PurgeRasterizers() {
   FTL_DCHECK(gpu_thread_checker_ &&
-             gpu_thread_checker_->IsCalledOnValidThread());
+             gpu_thread_checker_->CalledOnValidThread());
   rasterizers_.erase(
       std::remove_if(rasterizers_.begin(), rasterizers_.end(), IsInvalid),
       rasterizers_.end());
 }
 
-void Shell::GetRasterizers(std::vector<ftl::WeakPtr<Rasterizer>>* rasterizers) {
+void Shell::GetRasterizers(std::vector<base::WeakPtr<Rasterizer>>* rasterizers) {
   FTL_DCHECK(gpu_thread_checker_ &&
-             gpu_thread_checker_->IsCalledOnValidThread());
+             gpu_thread_checker_->CalledOnValidThread());
   *rasterizers = rasterizers_;
 }
 
-void Shell::AddPlatformView(const ftl::WeakPtr<PlatformView>& platform_view) {
-  FTL_DCHECK(ui_thread_checker_ && ui_thread_checker_->IsCalledOnValidThread());
+void Shell::AddPlatformView(const base::WeakPtr<PlatformView>& platform_view) {
+  FTL_DCHECK(ui_thread_checker_ && ui_thread_checker_->CalledOnValidThread());
   if (platform_view) {
     platform_views_.push_back(platform_view);
   }
 }
 
 void Shell::PurgePlatformViews() {
-  FTL_DCHECK(ui_thread_checker_ && ui_thread_checker_->IsCalledOnValidThread());
+  FTL_DCHECK(ui_thread_checker_ && ui_thread_checker_->CalledOnValidThread());
   platform_views_.erase(std::remove_if(platform_views_.begin(),
                                        platform_views_.end(), IsViewInvalid),
                         platform_views_.end());
 }
 
 void Shell::GetPlatformViews(
-    std::vector<ftl::WeakPtr<PlatformView>>* platform_views) {
-  FTL_DCHECK(ui_thread_checker_ && ui_thread_checker_->IsCalledOnValidThread());
+    std::vector<base::WeakPtr<PlatformView>>* platform_views) {
+  FTL_DCHECK(ui_thread_checker_ && ui_thread_checker_->CalledOnValidThread());
   *platform_views = platform_views_;
 }
 
@@ -268,7 +292,7 @@ void Shell::WaitForPlatformViewIds(
 void Shell::WaitForPlatformViewsIdsUIThread(
     std::vector<PlatformViewInfo>* platform_view_ids,
     ftl::AutoResetWaitableEvent* latch) {
-  std::vector<ftl::WeakPtr<PlatformView>> platform_views;
+  std::vector<base::WeakPtr<PlatformView>> platform_views;
   GetPlatformViews(&platform_views);
   for (auto it = platform_views.begin(); it != platform_views.end(); it++) {
     PlatformView* view = it->get();
@@ -317,7 +341,7 @@ void Shell::RunInPlatformViewUIThread(uintptr_t view_id,
                                       int64_t* dart_isolate_id,
                                       std::string* isolate_name,
                                       ftl::AutoResetWaitableEvent* latch) {
-  FTL_DCHECK(ui_thread_checker_ && ui_thread_checker_->IsCalledOnValidThread());
+  FTL_DCHECK(ui_thread_checker_ && ui_thread_checker_->CalledOnValidThread());
 
   *view_existed = false;
 

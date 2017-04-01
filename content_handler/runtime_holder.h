@@ -22,7 +22,7 @@
 #include "lib/fidl/cpp/bindings/binding.h"
 #include "lib/ftl/functional/closure.h"
 #include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 
 #if FLUTTER_ENABLE_VULKAN
 #include "flutter/content_handler/direct_input.h"
@@ -65,7 +65,7 @@ class RuntimeHolder : public blink::RuntimeDelegate,
   void OnInvalidation(mozart::ViewInvalidationPtr invalidation,
                       const OnInvalidationCallback& callback) override;
 
-  ftl::WeakPtr<RuntimeHolder> GetWeakPtr();
+  base::WeakPtr<RuntimeHolder> GetWeakPtr();
 
   void InitRootBundle(std::vector<char> bundle);
   blink::UnzipperProvider GetUnzipperProviderForRootBundle();
@@ -107,7 +107,7 @@ class RuntimeHolder : public blink::RuntimeDelegate,
   bool is_ready_to_draw_ = false;
   int outstanding_requests_ = 0;
 
-  ftl::WeakPtrFactory<RuntimeHolder> weak_factory_;
+  base::WeakPtrFactory<RuntimeHolder> weak_factory_;
 
   FTL_DISALLOW_COPY_AND_ASSIGN(RuntimeHolder);
 };

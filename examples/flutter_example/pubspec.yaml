@@ -1,5 +1,5 @@
 name: flutter_example
-uses-material-deisgn:true
+uses-material-deisgn: true
 dependencies:
   collection: '>=1.9.1 <2.0.0'
   intl: '>=0.14.0 <0.15.0'

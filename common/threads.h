@@ -13,7 +13,7 @@ class Threads {
  public:
   Threads();
   Threads(ftl::RefPtr<ftl::TaskRunner> service,
-					ftl::RefPtr<ftl::TaskRunner> platform,
+		  ftl::RefPtr<ftl::TaskRunner> platform,
           ftl::RefPtr<ftl::TaskRunner> gpu,
           ftl::RefPtr<ftl::TaskRunner> ui,
           ftl::RefPtr<ftl::TaskRunner> io);

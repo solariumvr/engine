@@ -44,7 +44,7 @@ void PhysicalModelLayer::UpdateScene(SceneUpdateContext& context,
 #endif  // defined(OS_FUCHSIA)
 
 void PhysicalModelLayer::Paint(PaintContext& context) {
-  TRACE_EVENT0("flutter", "PhysicalModelLayer::Paint");
+  //TRACE_EVENT0("flutter", "PhysicalModelLayer::Paint");
 
   SkPath path;
   path.addRRect(rrect_);

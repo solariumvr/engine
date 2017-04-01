@@ -227,7 +227,7 @@ sk_sp<SkTypeface> FontCache::createTypeface(const FontDescription& fontDescripti
 }
 #endif
 
-#if !OS(WIN)
+//#if !OS(WIN)
 FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontDescription, const FontFaceCreationParams& creationParams, float fontSize)
 {
     CString name;
@@ -244,6 +244,6 @@ FontPlatformData* FontCache::createFontPlatformData(const FontDescription& fontD
         fontDescription.useSubpixelPositioning());
     return result;
 }
-#endif // !OS(WIN)
+//#endif // !OS(WIN)
 
 } // namespace blink

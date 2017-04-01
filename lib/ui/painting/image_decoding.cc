@@ -28,7 +28,7 @@ namespace blink {
 namespace {
 
 sk_sp<SkImage> DecodeImage(sk_sp<SkData> buffer) {
-  TRACE_EVENT0("blink", "DecodeImage");
+  //TRACE_EVENT0("blink", "DecodeImage");
 
   if (buffer == nullptr || buffer->isEmpty()) {
     return nullptr;

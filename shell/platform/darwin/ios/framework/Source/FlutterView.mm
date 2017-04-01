@@ -43,7 +43,7 @@
   return YES;
 }
 
-void SnapshotRasterizer(ftl::WeakPtr<shell::Rasterizer> rasterizer,
+void SnapshotRasterizer(base::WeakPtr<shell::Rasterizer> rasterizer,
                         CGContextRef context,
                         bool is_opaque) {
   if (!rasterizer) {
@@ -97,7 +97,7 @@ void SnapshotContents(CGContextRef context, bool is_opaque) {
   // platform view. So use that. Once we support multiple platform views, the
   // shell will need to provide a way to get the rasterizer for a specific
   // platform view.
-  std::vector<ftl::WeakPtr<shell::Rasterizer>> registered_rasterizers;
+  std::vector<base::WeakPtr<shell::Rasterizer>> registered_rasterizers;
   shell::Shell::Shared().GetRasterizers(&registered_rasterizers);
   for (auto& rasterizer : registered_rasterizers) {
     SnapshotRasterizer(rasterizer, context, is_opaque);

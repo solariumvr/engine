@@ -8,7 +8,7 @@
 #include "flutter/shell/common/surface.h"
 #include "flutter/synchronization/debug_thread_checker.h"
 #include "lib/ftl/macros.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 
 namespace shell {
 
@@ -41,7 +41,7 @@ class GPUSurfaceGL : public Surface {
   GPUSurfaceGLDelegate* delegate_;
   sk_sp<GrContext> context_;
   sk_sp<SkSurface> cached_surface_;
-  ftl::WeakPtrFactory<GPUSurfaceGL> weak_factory_;
+  base::WeakPtrFactory<GPUSurfaceGL> weak_factory_;
 
   sk_sp<SkSurface> CreateSurface(const SkISize& size);
 

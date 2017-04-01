@@ -54,7 +54,7 @@ void PlatformViewIOS::SetupAndLoadFromSource(
       });
 }
 
-ftl::WeakPtr<PlatformViewIOS> PlatformViewIOS::GetWeakPtr() {
+base::WeakPtr<PlatformViewIOS> PlatformViewIOS::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 

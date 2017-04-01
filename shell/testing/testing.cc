@@ -18,7 +18,7 @@ bool InitForTesting(const ftl::CommandLine& command_line) {
 //    return false;
 //  test.path = args[0];
 //  TestRunner::Shared().Run(test);
-//  return true;
+  return true;
 }
 
 }  // namespace shell

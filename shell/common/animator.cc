@@ -5,7 +5,7 @@
 #include "flutter/shell/common/animator.h"
 
 #include "flutter/common/threads.h"
-#include "flutter/fml/trace_event.h"
+//#include "base/trace_event/trace_event.h"
 #include "lib/ftl/time/stopwatch.h"
 #include "lib/ftl/functional/make_copyable.h"
 
@@ -52,7 +52,7 @@ void Animator::BeginFrame(ftl::TimePoint frame_time) {
       // If we still don't have valid continuation, the pipeline is currently
       // full because the consumer is being too slow. Try again at the next
       // frame interval.
-      TRACE_EVENT_INSTANT0("flutter", "ConsumerSlowDefer");
+//      TRACE_EVENT_INSTANT0("flutter", "ConsumerSlowDefer");
       RequestFrame();
       return;
     }
@@ -107,7 +107,7 @@ void Animator::RequestFrame() {
   blink::Threads::UI()->PostTask([self = weak_factory_.GetWeakPtr()]() {
     if (!self.get())
       return;
-    TRACE_EVENT_INSTANT0("flutter", "RequestFrame");
+//    TRACE_EVENT_INSTANT0("flutter", "RequestFrame");
     self->AwaitVSync();
   });
 }

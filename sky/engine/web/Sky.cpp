@@ -30,6 +30,8 @@
 
 #include "flutter/sky/engine/public/web/Sky.h"
 
+#include "base/message_loop/message_loop.h"
+#include "base/pending_task.h"
 #include "flutter/glue/trace_event.h"
 #include "flutter/sky/engine/core/Init.h"
 #include "flutter/sky/engine/public/platform/Platform.h"
@@ -72,13 +74,19 @@ void removeMessageLoopObservers() {
 
 #else  // defined(OS_FUCHSIA)
 
-class RunMicrotasksTaskObserver : public fml::TaskObserver {
+class RunMicrotasksTaskObserver : public base::MessageLoop::TaskObserver {
  public:
   RunMicrotasksTaskObserver() = default;
 
   ~RunMicrotasksTaskObserver() override = default;
 
-  void DidProcessTask() override { didProcessTask(); }
+    // This method is called before processing a task.
+  void WillProcessTask(const base::PendingTask& pending_task) override {};
+
+    // This method is called after processing a task.
+  void DidProcessTask(const base::PendingTask& pending_task) override { didProcessTask(); };
+
+  //void DidProcessTask() override { didProcessTask(); }
 };
 
 // FIXME(chinmaygarde): The awkward use of the global here is be cause we cannot
@@ -88,12 +96,12 @@ static RunMicrotasksTaskObserver* g_run_microtasks_task_observer = nullptr;
 
 void addMessageLoopObservers() {
   g_run_microtasks_task_observer = new RunMicrotasksTaskObserver();
-  fml::MessageLoop::GetCurrent().AddTaskObserver(
+  base::MessageLoop::current()->AddTaskObserver(
       g_run_microtasks_task_observer);
 }
 
 void removeMessageLoopObservers() {
-  fml::MessageLoop::GetCurrent().RemoveTaskObserver(
+  base::MessageLoop::current()->RemoveTaskObserver(
       g_run_microtasks_task_observer);
   delete g_run_microtasks_task_observer;
   g_run_microtasks_task_observer = nullptr;
@@ -108,7 +116,7 @@ void removeMessageLoopObservers() {
 static bool s_webKitInitialized = false;
 
 void InitEngine(Platform* platform) {
-  TRACE_EVENT0("flutter", "InitEngine");
+  //TRACE_EVENT0("flutter", "InitEngine");
 
   ASSERT(!s_webKitInitialized);
   s_webKitInitialized = true;

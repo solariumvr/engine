@@ -5,7 +5,7 @@
 #include "flutter/shell/common/engine.h"
 
 #include <sys/stat.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include <memory>
 #include <utility>
 
@@ -69,7 +69,8 @@ std::string FindPackagesPath(const std::string& main_dart) {
 }
 
 std::string GetScriptUriFromPath(const std::string& path) {
-  return "file://" + path;
+	base::FilePath file_path(path);
+  return "file://" + file_path.MaybeAsASCII();
 }
 
 }  // namespace
@@ -87,7 +88,7 @@ Engine::Engine(PlatformView* platform_view)
 
 Engine::~Engine() {}
 
-ftl::WeakPtr<Engine> Engine::GetWeakPtr() {
+base::WeakPtr<Engine> Engine::GetWeakPtr() {
   return weak_factory_.GetWeakPtr();
 }
 
@@ -96,7 +97,7 @@ void Engine::Init() {
 }
 
 void Engine::RunBundle(const std::string& bundle_path) {
-  TRACE_EVENT0("flutter", "Engine::RunBundle");
+  //TRACE_EVENT0("flutter", "Engine::RunBundle");
   ConfigureAssetBundle(bundle_path);
   ConfigureRuntime(GetScriptUriFromPath(bundle_path));
   if (blink::IsRunningPrecompiledCode()) {
@@ -117,7 +118,7 @@ void Engine::RunBundle(const std::string& bundle_path) {
 
 void Engine::RunBundleAndSnapshot(const std::string& bundle_path,
                                   const std::string& snapshot_override) {
-  TRACE_EVENT0("flutter", "Engine::RunBundleAndSnapshot");
+  //TRACE_EVENT0("flutter", "Engine::RunBundleAndSnapshot");
   if (snapshot_override.empty()) {
     RunBundle(bundle_path);
     return;
@@ -138,7 +139,7 @@ void Engine::RunBundleAndSnapshot(const std::string& bundle_path,
 void Engine::RunBundleAndSource(const std::string& bundle_path,
                                 const std::string& main,
                                 const std::string& packages) {
-  TRACE_EVENT0("flutter", "Engine::RunBundleAndSource");
+  //TRACE_EVENT0("flutter", "Engine::RunBundleAndSource");
   FTL_CHECK(!blink::IsRunningPrecompiledCode())
       << "Cannot run from source in a precompiled build.";
   std::string packages_path = packages;
@@ -152,7 +153,7 @@ void Engine::RunBundleAndSource(const std::string& bundle_path,
 }
 
 void Engine::BeginFrame(ftl::TimePoint frame_time) {
-  TRACE_EVENT0("flutter", "Engine::BeginFrame");
+  //TRACE_EVENT0("flutter", "Engine::BeginFrame");
   if (runtime_)
     runtime_->BeginFrame(frame_time);
 }

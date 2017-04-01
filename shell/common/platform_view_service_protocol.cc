@@ -13,7 +13,7 @@
 #include "flutter/shell/common/picture_serializer.h"
 #include "flutter/shell/common/rasterizer.h"
 #include "flutter/shell/common/shell.h"
-#include "lib/ftl/memory/weak_ptr.h"
+#include "base/memory/weak_ptr.h"
 #include "third_party/skia/include/core/SkSurface.h"
 #include "third_party/skia/src/utils/SkBase64.h"
 
@@ -284,7 +284,7 @@ bool PlatformViewServiceProtocol::Screenshot(const char* method,
 }
 
 void PlatformViewServiceProtocol::ScreenshotGpuTask(SkBitmap* bitmap) {
-  std::vector<ftl::WeakPtr<Rasterizer>> rasterizers;
+  std::vector<base::WeakPtr<Rasterizer>> rasterizers;
   Shell::Shared().GetRasterizers(&rasterizers);
   if (rasterizers.size() != 1)
     return;
