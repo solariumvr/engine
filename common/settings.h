@@ -13,10 +13,10 @@
 namespace blink {
 
 struct Settings {
-  bool enable_observatory = false;
+  bool enable_observatory = true;
   // Port on target will be auto selected by the OS. A message will be printed
   // on the target with the port after it has been selected.
-  uint32_t observatory_port = 0;
+  uint32_t observatory_port = 5858;
   bool enable_diagnostic = false;
   uint32_t diagnostic_port = 0;
   bool start_paused = false;

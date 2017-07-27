@@ -21,6 +21,8 @@ class GPUSurfaceGLDelegate {
   virtual bool GLContextPresent() = 0;
 
   virtual intptr_t GLContextFBO() const = 0;
+
+  virtual void AfterRender(sk_sp<SkImage> img) = 0;
 };
 
 class GPUSurfaceGL : public Surface {
@@ -37,6 +39,8 @@ class GPUSurfaceGL : public Surface {
 
   GrContext* GetContext() override;
 
+  void CaptureSurface(sk_sp<SkImage> img);
+
  private:
   GPUSurfaceGLDelegate* delegate_;
   sk_sp<GrContext> context_;
@@ -47,7 +51,7 @@ class GPUSurfaceGL : public Surface {
 
   sk_sp<SkSurface> AcquireSurface(const SkISize& size);
 
-  bool PresentSurface(SkCanvas* canvas);
+  bool PresentSurface(SkCanvas* canvas, const SurfaceFrame& surface_frame);
 
   bool SelectPixelConfig(GrPixelConfig* config);
 

@@ -31,11 +31,10 @@ DirectoryAssetBundle::DirectoryAssetBundle(std::string directory)
     : directory_(std::move(directory)) {}
 
 std::string DirectoryAssetBundle::GetPathForAsset(
-    const std::string& asset_name) {
-  base::FilePath path(directory_ + "/" + asset_name);
-	std::string asset_path = path.MaybeAsASCII();// files::SimplifyPath(directory_ + "/" + asset_name);
+        const std::string& asset_name) {
+  std::string asset_path = files::SimplifyPath(directory_ + "/" + asset_name);
   if (asset_path.find(directory_) != 0u) {
-    LOG(ERROR) << "Asset name '" << asset_name
+    FTL_LOG(ERROR) << "Asset name '" << asset_name
                    << "' attempted to traverse outside asset bundle.";
     return std::string();
   }

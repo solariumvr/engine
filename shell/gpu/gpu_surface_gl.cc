@@ -81,23 +81,29 @@ std::unique_ptr<SurfaceFrame> GPUSurfaceGL::AcquireFrame(const SkISize& size) {
 
   auto weak_this = weak_factory_.GetWeakPtr();
 
-  SurfaceFrame::SubmitCallback submit_callback = [weak_this](
-      const SurfaceFrame& surface_frame, SkCanvas* canvas) {
-    return weak_this ? weak_this->PresentSurface(canvas) : false;
-  };
+  SurfaceFrame::SubmitCallback submit_callback =
+      [weak_this](const SurfaceFrame& surface_frame, SkCanvas* canvas) {
+        // sk_sp<SkBitmap> map();
+        return weak_this ? weak_this->PresentSurface(canvas, surface_frame)
+                         : false;
+      };
 
   return std::make_unique<SurfaceFrame>(surface, submit_callback);
 }
 
-bool GPUSurfaceGL::PresentSurface(SkCanvas* canvas) {
+bool GPUSurfaceGL::PresentSurface(SkCanvas* canvas,
+                                  const SurfaceFrame& surface_frame) {
   if (delegate_ == nullptr || canvas == nullptr) {
     return false;
   }
 
   {
-    //TRACE_EVENT0("flutter", "SkCanvas::Flush");
+    // TRACE_EVENT0("flutter", "SkCanvas::Flush");
     canvas->flush();
   }
+
+  sk_sp<SkImage> img(surface_frame.SkiaSurface()->makeImageSnapshot());
+  CaptureSurface(img);
 
   delegate_->GLContextPresent();
 
@@ -158,6 +164,10 @@ sk_sp<SkSurface> GPUSurfaceGL::AcquireSurface(const SkISize& size) {
 
 GrContext* GPUSurfaceGL::GetContext() {
   return context_.get();
+}
+
+void GPUSurfaceGL::CaptureSurface(sk_sp<SkImage> img) {
+  delegate_->AfterRender(img);
 }
 
 }  // namespace shell

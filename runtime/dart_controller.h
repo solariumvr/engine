@@ -20,6 +20,8 @@ class DartController {
   DartController();
   ~DartController();
 
+  static DartController* GetInstance();
+
   tonic::DartErrorHandleType RunFromKernel(const uint8_t* buffer, size_t size);
   tonic::DartErrorHandleType RunFromPrecompiledSnapshot();
   tonic::DartErrorHandleType RunFromSnapshot(const uint8_t* buffer, size_t size);

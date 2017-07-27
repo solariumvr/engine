@@ -54,13 +54,10 @@ bool PathExists(const std::string& path) {
 }
 
 std::string FindPackagesPath(const std::string& main_dart) {
-	base::FilePath file_path(main_dart);
-	std::string directory = file_path.DirName().MaybeAsASCII();
-  //std::string directory = files::GetDirectoryName(main_dart);
+  std::string directory = files::GetDirectoryName(main_dart);
   std::string packages_path = directory + "/.packages";
   if (!PathExists(packages_path)) {
-    //directory = files::GetDirectoryName(directory);
-		directory = file_path.DirName().DirName().MaybeAsASCII();
+    directory = files::GetDirectoryName(directory);
     packages_path = directory + "/.packages";
     if (!PathExists(packages_path))
       packages_path = std::string();
@@ -69,8 +66,7 @@ std::string FindPackagesPath(const std::string& main_dart) {
 }
 
 std::string GetScriptUriFromPath(const std::string& path) {
-	base::FilePath file_path(path);
-  return "file://" + file_path.MaybeAsASCII();
+  return "file://" + path;
 }
 
 }  // namespace

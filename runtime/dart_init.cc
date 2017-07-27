@@ -48,6 +48,7 @@
 #include "lib/tonic/scopes/dart_api_scope.h"
 #include "lib/tonic/scopes/dart_isolate_scope.h"
 #include "lib/tonic/typed_data/uint8_list.h"
+#include "solarium/navigator/dart_navigator.h"
 
 #if defined(OS_ANDROID)
 #include "flutter/lib/jni/dart_jni.h"
@@ -211,9 +212,10 @@ Dart_Isolate ServiceIsolateCreateCallback(const char* script_uri,
     tonic::DartApiScope dart_api_scope;
     DartIO::InitForIsolate();
     DartUI::InitForIsolate();
+    navigator::DartNavigator::InitForIsolate();
     DartRuntimeHooks::Install(DartRuntimeHooks::SecondaryIsolate, script_uri);
     const Settings& settings = Settings::Get();
-    if (settings.enable_observatory) {
+    if (true) {
       std::string ip = "127.0.0.1";
       const intptr_t port = settings.observatory_port;
       const bool disable_websocket_origin_check = false;
@@ -221,6 +223,7 @@ Dart_Isolate ServiceIsolateCreateCallback(const char* script_uri,
           ip, port, tonic::DartState::HandleLibraryTag,
           IsRunningPrecompiledCode(), disable_websocket_origin_check, error);
       FTL_CHECK(service_isolate_booted) << error;
+      DLOG(INFO) << "Observatory ID: " << ip << ":" << port;
     }
 
     if (g_service_isolate_hook)
@@ -295,6 +298,7 @@ Dart_Isolate IsolateCreateCallback(const char* script_uri,
     tonic::DartApiScope dart_api_scope;
     DartIO::InitForIsolate();
     DartUI::InitForIsolate();
+    navigator::DartNavigator::InitForIsolate();
     DartRuntimeHooks::Install(DartRuntimeHooks::SecondaryIsolate, script_uri);
 
     std::unique_ptr<DartClassProvider> ui_class_provider(
@@ -669,7 +673,7 @@ void InitDartVM() {
 
 #if FLUTTER_RUNTIME_MODE != FLUTTER_RUNTIME_MODE_RELEASE
   {
-    TRACE_EVENT0("flutter", "DartDebugger::InitDebugger");
+    //TRACE_EVENT0("flutter", "DartDebugger::InitDebugger");
     // This should be called before calling Dart_Initialize.
     tonic::DartDebugger::InitDebugger();
   }
@@ -679,6 +683,7 @@ void InitDartVM() {
 #if defined(OS_ANDROID)
   DartJni::InitForGlobal(GetDartJniDataForCurrentIsolate);
 #endif
+  navigator::DartNavigator::InitForGlobal();
 
   // Setup embedder tracing hooks. To avoid data races, it is recommended that
   // these hooks be installed before the DartInitialize, so do that setup now.

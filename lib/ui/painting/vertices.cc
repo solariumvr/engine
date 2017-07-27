@@ -71,13 +71,18 @@ void Vertices::init(SkCanvas::VertexMode vertex_mode,
   std::unique_ptr<const uint16_t[]> sk_indices(DecodeInts<uint16_t>(indices));
 
   // TODO(fmalita): refactor to use SkVertices::Builder and avoid a copy.
-  vertices_ = SkVertices::MakeCopy(vertex_mode,
-                                   positions.num_elements() / 2,
-                                   sk_positions.get(),
-                                   sk_texs.get(),
-                                   sk_colors.get(),
-                                   indices.num_elements(),
-                                   sk_indices.get());
+  //vertices_ = SkVertices::MakeCopy(vertex_mode,
+  //                                 positions.num_elements() / 2,
+  //                                 sk_positions.get(),
+  //                                 sk_texs.get(),
+  //                                 sk_colors.get(),
+  //                                 indices.num_elements(),
+  //                                 sk_indices.get());
+  vertices_ = SkVertices::Make(vertex_mode,
+                                   std::move(sk_positions),
+                                   std::move(sk_colors),
+                                   std::move(sk_texs),
+									positions.num_elements() / 2);
 }
 
 }  // namespace blink
